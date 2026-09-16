@@ -1,0 +1,2050 @@
+/* ============================================================
+   Design tokens
+   ============================================================ */
+
+:root {
+  --bg: #f4f6f8;
+  --bg-accent: radial-gradient(1200px 400px at 15% -10%, #e2ecf9 0%, transparent 70%);
+  --surface: #ffffff;
+  --surface-2: #f2f4f7;
+  --surface-3: #e9edf2;
+  --border: #dde2e8;
+  --border-strong: #c6ced8;
+  --text: #16202b;
+  --text-2: #48566a;
+  --muted: #6b7889;
+  --accent: #0b6fd0;
+  --accent-hover: #0959a8;
+  --accent-soft: #e7f0fb;
+  --pass: #0a7f56;
+  --pass-soft: #e2f4ec;
+  --near: #9a6a10;
+  --near-soft: #fbf1dc;
+  --fail: #b5341c;
+  --fail-soft: #fbe9e5;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --shadow-sm: 0 1px 2px rgb(16 32 48 / 0.06), 0 1px 3px rgb(16 32 48 / 0.04);
+  --shadow-md: 0 2px 4px rgb(16 32 48 / 0.05), 0 8px 24px rgb(16 32 48 / 0.07);
+  --measure: 68ch;
+
+  color-scheme: light dark;
+}
+
+/* Dark palette. Applied when the user picks dark explicitly (data-theme="dark") or,
+   when no explicit choice exists, when the OS asks for dark. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --bg-accent: radial-gradient(1200px 400px at 15% -10%, #16263a 0%, transparent 70%);
+  --surface: #151c25;
+  --surface-2: #1b232e;
+  --surface-3: #232d3a;
+  --border: #28323f;
+  --border-strong: #3a4655;
+  --text: #e9edf2;
+  --text-2: #b3becd;
+  --muted: #8d99a9;
+  --accent: #59a5ea;
+  --accent-hover: #7bb9f2;
+  --accent-soft: #16283c;
+  --pass: #47cf95;
+  --pass-soft: #122b23;
+  --near: #e2b84f;
+  --near-soft: #2c2413;
+  --fail: #ff8f77;
+  --fail-soft: #2e1a17;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 2px 6px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.35);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0d1117;
+    --bg-accent: radial-gradient(1200px 400px at 15% -10%, #16263a 0%, transparent 70%);
+    --surface: #151c25;
+    --surface-2: #1b232e;
+    --surface-3: #232d3a;
+    --border: #28323f;
+    --border-strong: #3a4655;
+    --text: #e9edf2;
+    --text-2: #b3becd;
+    --muted: #8d99a9;
+    --accent: #59a5ea;
+    --accent-hover: #7bb9f2;
+    --accent-soft: #16283c;
+    --pass: #47cf95;
+    --pass-soft: #122b23;
+    --near: #e2b84f;
+    --near-soft: #2c2413;
+    --fail: #ff8f77;
+    --fail-soft: #2e1a17;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 2px 6px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.35);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image: var(--bg-accent);
+  background-repeat: no-repeat;
+  color: var(--text);
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+}
+
+h3 {
+  font-size: 0.98rem;
+}
+
+p {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   Shell
+   ============================================================ */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0.5rem;
+  z-index: 100;
+  background: var(--surface);
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+}
+
+.skip-link:focus {
+  left: 0.75rem;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.25rem;
+  padding: 0.6rem clamp(0.85rem, 3vw, 2rem);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 650;
+  font-size: 1rem;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  background: linear-gradient(135deg, #ff9d24, #e8700e);
+  color: #16202b;
+  padding: 0.18rem 0.42rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.nav {
+  display: flex;
+  gap: 0.15rem;
+  flex: 1;
+  padding: 0.2rem;
+  background: var(--surface-2);
+  border-radius: 999px;
+  width: fit-content;
+  flex-grow: 0;
+  margin-inline: auto;
+}
+
+.nav-link {
+  padding: 0.38rem 0.85rem;
+  border-radius: 999px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-link:hover {
+  color: var(--text);
+  background: var(--surface-3);
+}
+
+.nav-link.active {
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 620;
+  box-shadow: var(--shadow-sm);
+}
+
+.provider-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 550;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--pass-soft);
+  color: var(--pass);
+  white-space: nowrap;
+}
+
+.provider-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.provider-badge.muted {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.topbar-end {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.theme-toggle {
+  min-height: 32px;
+  width: 32px;
+  padding: 0;
+  border-radius: 50%;
+  border-color: transparent;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.theme-toggle:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: transparent;
+  color: var(--text);
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.85rem, 3vw, 2rem) 3rem;
+}
+
+.footer {
+  padding: 1.1rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+
+/* ============================================================
+   Primitives
+   ============================================================ */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.stack.tight {
+  gap: 0.6rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: clamp(1rem, 2.4vw, 1.4rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.3rem;
+}
+
+.page-head p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: var(--measure);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 0.84rem;
+}
+
+.measure {
+  max-width: var(--measure);
+}
+
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- buttons ---------- */
+
+.button-row {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.button-row.end {
+  justify-content: flex-end;
+}
+
+button {
+  font: inherit;
+  font-weight: 550;
+  min-height: 40px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.06s ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--muted);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Disabled is the only greyed-out state, so an enabled button never reads as inert.
+   The variant selectors are listed explicitly: they are declared later, so without
+   them a disabled .primary would keep its accent styling. */
+button:disabled,
+button.primary:disabled,
+button.ghost:disabled,
+button.icon:disabled {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--muted);
+  opacity: 0.65;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Primary keeps the normal button surface and simply carries more emphasis via an
+   accent border and label — a solid fill reads as a static badge to some users. */
+button.primary {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 650;
+  box-shadow: var(--shadow-sm);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+button.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-2);
+}
+
+button.ghost:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: transparent;
+  color: var(--text);
+}
+
+button.small {
+  min-height: 30px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+button.icon {
+  min-height: 32px;
+  width: 32px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+button.icon:hover:not(:disabled) {
+  background: var(--fail-soft);
+  color: var(--fail);
+  border-color: transparent;
+}
+
+a.button-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0.5rem 0.85rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 550;
+  border-radius: var(--r-sm);
+}
+
+a.button-link:hover {
+  background: var(--accent-soft);
+}
+
+a {
+  color: var(--accent);
+}
+
+/* ---------- forms ---------- */
+
+.toolbar {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 0.9rem 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+  min-width: 150px;
+  flex: 1;
+}
+
+.field.wide {
+  grid-column: 1 / -1;
+  flex-basis: 100%;
+}
+
+select,
+input[type='text'],
+input[type='number'],
+input[type='password'] {
+  min-height: 40px;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 450;
+}
+
+select:hover,
+input:hover {
+  border-color: var(--muted);
+}
+
+/* ---------- chips & badges ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 0.18rem 0.5rem;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.chip.pass,
+.chip.status-strong,
+.chip.status-on-track {
+  background: var(--pass-soft);
+  color: var(--pass);
+}
+
+.chip.fail,
+.chip.status-weak {
+  background: var(--fail-soft);
+  color: var(--fail);
+}
+
+.chip.status-needs-work,
+.chip.difficulty-medium {
+  background: var(--near-soft);
+  color: var(--near);
+}
+
+.chip.difficulty-hard {
+  background: var(--fail-soft);
+  color: var(--fail);
+}
+
+.chip.difficulty-easy {
+  background: var(--pass-soft);
+  color: var(--pass);
+}
+
+.chip.status-no-data {
+  color: var(--muted);
+}
+
+.chip.accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ---------- meters & dials ---------- */
+
+.meter {
+  position: relative;
+  height: 8px;
+  background: var(--surface-3);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.meter.pass .meter-fill {
+  background: var(--pass);
+}
+
+.meter.near .meter-fill {
+  background: var(--near);
+}
+
+.meter.low .meter-fill {
+  background: var(--fail);
+}
+
+.meter-tick {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--text);
+  opacity: 0.35;
+}
+
+.dial {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.dial svg {
+  display: block;
+}
+
+.dial-track {
+  stroke: var(--surface-3);
+}
+
+.dial-value {
+  stroke: var(--accent);
+  transition: stroke-dasharray 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dial.pass .dial-value {
+  stroke: var(--pass);
+}
+
+.dial.near .dial-value {
+  stroke: var(--near);
+}
+
+.dial.low .dial-value {
+  stroke: var(--fail);
+}
+
+.dial-label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+
+.dial-label strong {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.dial-label span {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* ---------- banners, empty states, skeletons ---------- */
+
+.banner {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.88rem;
+}
+
+.banner-icon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.banner.error {
+  background: var(--fail-soft);
+  color: var(--fail);
+}
+
+.banner.warning {
+  background: var(--near-soft);
+  color: var(--near);
+}
+
+.banner.success {
+  background: var(--pass-soft);
+  color: var(--pass);
+}
+
+.banner.info {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 2.25rem 1.25rem;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-lg);
+}
+
+.empty p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 46ch;
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton span {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.spinner-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--surface-3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- modal ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgb(8 14 22 / 0.55);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  animation: fade 0.15s ease;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  padding: 1.35rem;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.modal p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ============================================================
+   Dashboard
+   ============================================================ */
+
+.cert-strip {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.3rem;
+  scrollbar-width: thin;
+}
+
+.cert-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  min-height: 0;
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.cert-tab strong {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.cert-tab span {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.cert-tab.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.cert-tab.selected strong {
+  color: var(--accent);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.85fr);
+  gap: 1.1rem;
+  align-items: start;
+}
+
+.hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.hero-main h1 {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+}
+
+.hero-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.35rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.hero-facts div {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-facts strong {
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.readiness-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  text-align: center;
+}
+
+.domain-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.domain-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.15rem 0.75rem;
+  align-items: center;
+}
+
+.domain-row .domain-name {
+  font-size: 0.88rem;
+  font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.domain-row .domain-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.domain-row .meter {
+  grid-column: 1 / -1;
+}
+
+.rec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rec {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  font-size: 0.87rem;
+}
+
+.rec p {
+  color: var(--text-2);
+}
+
+/* ============================================================
+   Questions
+   ============================================================ */
+
+.question-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.question {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: clamp(0.9rem, 2vw, 1.3rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.question-head {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.question-head .spacer {
+  flex: 1;
+}
+
+.stem {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+.options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: var(--measure);
+}
+
+.options li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: 0.92rem;
+  color: var(--text-2);
+}
+
+.opt-label {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.options li.correct {
+  border-color: var(--pass);
+  background: var(--pass-soft);
+  color: var(--text);
+}
+
+.options li.correct .opt-label {
+  background: var(--pass);
+  color: #fff;
+}
+
+.options li.wrong {
+  border-color: var(--fail);
+  background: var(--fail-soft);
+}
+
+.options li.wrong .opt-label {
+  background: var(--fail);
+  color: #fff;
+}
+
+/* selectable variant used inside the exam runner */
+.options.selectable li {
+  padding: 0;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.options.selectable li:hover:not(.locked) {
+  border-color: var(--accent);
+}
+
+.options.selectable label {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+}
+
+.options.selectable li.locked label {
+  cursor: default;
+}
+
+.options.selectable input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.options.selectable li.picked {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.options.selectable li.picked .opt-label {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Once revealed, the correct/wrong verdict must outrank the blue "picked" state. */
+.options.selectable li.correct {
+  border-color: var(--pass);
+  background: var(--pass-soft);
+}
+
+.options.selectable li.correct .opt-label {
+  background: var(--pass);
+  color: #fff;
+}
+
+.options.selectable li.wrong {
+  border-color: var(--fail);
+  background: var(--fail-soft);
+}
+
+.options.selectable li.wrong .opt-label {
+  background: var(--fail);
+  color: #fff;
+}
+
+.options.selectable li:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.explanation {
+  font-size: 0.88rem;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: 0.65rem 0.8rem;
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+.explanation strong {
+  color: var(--text);
+}
+
+.feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--r-md);
+  background: var(--pass-soft);
+  max-width: var(--measure);
+  font-size: 0.89rem;
+}
+
+.feedback.wrong {
+  background: var(--fail-soft);
+}
+
+.feedback .verdict {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  color: var(--pass);
+}
+
+.feedback.wrong .verdict {
+  color: var(--fail);
+}
+
+.feedback p {
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+
+/* ============================================================
+   Exam runner
+   ============================================================ */
+
+/* The runner reads as a single focused column rather than a full-width dashboard. */
+.exam-focus {
+  width: 100%;
+  max-width: 800px;
+  margin-inline: auto;
+}
+
+.exam-bar {
+  position: sticky;
+  top: 56px;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 0.6rem 0.9rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.exam-bar .exam-progress {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.exam-bar .counts {
+  font-size: 0.8rem;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.timer {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.timer.urgent {
+  background: var(--fail-soft);
+  color: var(--fail);
+}
+
+.jump-grid {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.jump-dot {
+  min-height: 28px;
+  width: 28px;
+  padding: 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 6px;
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+.jump-dot.answered {
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
+  color: var(--accent);
+}
+
+.jump-dot.current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.exam-actions {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.15rem;
+}
+
+.exam-actions .spacer {
+  flex: 1;
+}
+
+.kbd-hint {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+kbd {
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+}
+
+/* ============================================================
+   Result & history
+   ============================================================ */
+
+.result-head {
+  display: flex;
+  gap: 1.35rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.result-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 220px;
+}
+
+.stat-row {
+  display: flex;
+  gap: 1.35rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat strong {
+  font-size: 1.15rem;
+  font-weight: 650;
+}
+
+.stat span {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.6rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.table thead th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom-color: var(--border-strong);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: var(--surface-2);
+}
+
+.bar-cell {
+  width: 130px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  /* Brand + status stay on row one; the nav wraps to its own full-width row. */
+  .nav {
+    order: 3;
+    /* flex-basis, not just width: the base rule's `flex: 1` sets basis to 0,
+       which would keep the nav on row one and overflow instead of wrapping. */
+    flex-basis: 100%;
+    width: 100%;
+    margin-inline: 0;
+    overflow-x: auto;
+    justify-content: space-between;
+  }
+
+  .topbar-end {
+    margin-left: auto;
+  }
+
+  .exam-bar {
+    top: 52px;
+  }
+}
+
+@media (max-width: 560px) {
+  body {
+    font-size: 14.5px;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody tr {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.15rem 0.6rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table td {
+    border: none;
+    padding: 0.1rem 0;
+  }
+
+  .bar-cell {
+    width: auto;
+    grid-column: 1 / -1;
+  }
+
+  .rec {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Review mode: the questions you got wrong. Toned like a warning rather than a primary
+   action, because it should read as "unfinished business", not as the happy path. */
+/* Same amber as the review button, so the mode reads consistently across the app. */
+.chip.review {
+  background: var(--near-soft);
+  color: var(--near);
+}
+
+button.review {
+  background: var(--near-soft);
+  color: var(--near);
+  border-color: color-mix(in srgb, var(--near) 35%, transparent);
+  font-weight: 600;
+}
+
+button.review:hover:not(:disabled) {
+  border-color: var(--near);
+}
+
+/* ============================================================
+   Lessons
+   ============================================================ */
+
+.chip.subtle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.chip.done {
+  background: var(--pass-soft);
+  color: var(--pass);
+}
+
+.lesson-progress {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.lesson-progress-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Filter tabs. A row of buttons rather than a select: with four options the choice should be
+   visible, and the counts people care about are the first two. */
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.segmented button {
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.segmented button:hover {
+  color: var(--text);
+}
+
+.segmented button.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.lesson-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.lesson-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lesson-row:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* The left edge carries the ranking the server computed, so the reason a row is near the top
+   is legible at a glance without reading the badge. */
+.lesson-row.weak {
+  border-left-color: var(--fail);
+}
+
+.lesson-row.learning {
+  border-left-color: var(--near);
+}
+
+.lesson-row.strong {
+  border-left-color: var(--pass);
+}
+
+.lesson-row-main {
+  flex: 1 1 22rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.lesson-row-body {
+  min-width: 0;
+}
+
+/* The official AWS mark for the service. Recognising the icon is half of recognising the
+   service in the console, so it sits at the start of the row rather than as decoration. */
+.service-icon {
+  flex: none;
+  display: block;
+  border-radius: 6px;
+}
+
+.lesson-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0.4rem 0 0.5rem;
+}
+
+.lesson-title-row h1 {
+  margin: 0;
+}
+
+.lesson-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lesson-row-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.lesson-row-main:hover h3 {
+  color: var(--accent);
+}
+
+.lesson-purpose {
+  margin: 0.35rem 0 0.6rem;
+  color: var(--text-2);
+  font-size: 0.9rem;
+  max-width: var(--measure);
+}
+
+.lesson-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.lesson-row-mastery {
+  display: grid;
+  gap: 0.2rem;
+  justify-items: end;
+  align-content: center;
+  padding: 0.9rem 1rem 0.9rem 0;
+  text-align: right;
+}
+
+.mastery {
+  font-size: 0.73rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.mastery.weak {
+  background: var(--fail-soft);
+  color: var(--fail);
+}
+
+.mastery.learning {
+  background: var(--near-soft);
+  color: var(--near);
+}
+
+.mastery.strong {
+  background: var(--pass-soft);
+  color: var(--pass);
+}
+
+/* ---------- one lesson ---------- */
+
+.lesson-head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+}
+
+.section-note {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* The verified half of the page. Tinted so the boundary with the generated half below is
+   visible without reading the section note. */
+.lesson-facts {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.fact-grid {
+  display: grid;
+  gap: 1rem;
+  margin: 0 0 1.1rem;
+}
+
+.fact-grid dt {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.fact-grid dd {
+  margin: 0;
+  max-width: var(--measure);
+  color: var(--text);
+}
+
+.lesson-overview {
+  margin: 0 0 1.4rem;
+  font-size: 1.02rem;
+  line-height: 1.65;
+  max-width: var(--measure);
+}
+
+.lesson-block {
+  margin-bottom: 1.4rem;
+}
+
+.lesson-block h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.93rem;
+  color: var(--text-2);
+}
+
+.lesson-block p {
+  margin: 0;
+  max-width: var(--measure);
+  line-height: 1.6;
+}
+
+.lesson-bullets {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.4rem;
+  max-width: var(--measure);
+  line-height: 1.55;
+}
+
+/* The section that moves a score most, so it gets the visual weight of a callout. */
+.lesson-block.traps {
+  background: var(--near-soft);
+  border-radius: var(--r-md);
+  padding: 0.9rem 1rem;
+}
+
+.lesson-block.traps h3 {
+  color: var(--near);
+}
+
+/* ============================================================
+   Lesson tutor — floating, draggable widget
+   ============================================================ */
+
+/* Closed state: one button in the corner. Kept small deliberately, so the lesson is the page and
+   the tutor is available rather than present. */
+.tutor-launcher {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+.tutor-launcher:hover {
+  background: var(--accent-hover);
+}
+
+.tutor-launcher > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.22);
+  font-size: 0.8rem;
+}
+
+.tutor-panel {
+  position: fixed;
+  z-index: 50;
+  width: 380px;
+  max-height: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0 1rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* While dragging, the pointer owns the panel: no text selection, no hover states firing on
+   whatever passes underneath. */
+.tutor-panel.dragging {
+  user-select: none;
+  cursor: grabbing;
+}
+
+.tutor-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 -1rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: var(--surface-2);
+  cursor: grab;
+  touch-action: none;
+}
+
+.tutor-panel.dragging .tutor-bar {
+  cursor: grabbing;
+}
+
+.tutor-bar-title {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.tutor-bar-title strong {
+  font-size: 0.92rem;
+}
+
+.tutor-bar-title span {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.tutor-transcript {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+  overflow-y: auto;
+  min-height: 3rem;
+  flex: 1;
+  padding-right: 0.25rem;
+}
+
+.tutor-empty {
+  margin: 0;
+}
+
+.tutor-turn {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tutor-question {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  background: var(--accent-soft);
+  border-radius: var(--r-sm);
+  font-weight: 600;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.tutor-answer {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tutor-by {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.tutor-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.tutor-form textarea {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.tutor-form textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* On a phone, dragging a panel around a screen it nearly fills is pointless, so it becomes a
+   bottom sheet and the inline position from the drag is overridden. */
+@media (max-width: 520px) {
+  .tutor-panel {
+    left: 0 !important;
+    top: auto !important;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 80vh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+  }
+
+  .tutor-bar {
+    cursor: default;
+  }
+}
+
+/* Visually hidden but still announced: the textarea needs a label that the design does not show. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Step through the curriculum. Two cards rather than plain links: at the foot of a long lesson
+   the next topic is the main thing you want, so it should be a target, not a footnote. */
+.lesson-steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.lesson-step {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.8rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.lesson-step:hover {
+  border-color: var(--accent);
+}
+
+.lesson-step.next {
+  text-align: right;
+}
+
+/* The only child is "next", so it must not stretch across both columns. */
+.lesson-step.next:first-child {
+  grid-column: 2;
+}
+
+.lesson-step-dir {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.lesson-step-title {
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.lesson-step:hover .lesson-step-title {
+  color: var(--accent);
+}
+
+@media (max-width: 560px) {
+  .lesson-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-step.next,
+  .lesson-step.next:first-child {
+    grid-column: 1;
+    text-align: left;
+  }
+}
+
+.lesson-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.lesson-related {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.87rem;
+}
+
+@media (max-width: 640px) {
+  .lesson-row-mastery {
+    justify-items: start;
+    text-align: left;
+    padding: 0 1rem 0.9rem;
+  }
+}

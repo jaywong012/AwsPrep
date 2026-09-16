@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>6ea501be-4fd2-4709-9cd4-427e1f67d641</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference question banks extracted from the official-style exam material by
+         tools/extract-reference-bank.py. Embedded so a deployed API carries its own bank. -->
+    <!-- Removed from Content first: the Web SDK publishes loose .json by default, and a second
+         copy next to the binary would look editable while the embedded one is what gets read. -->
+    <Content Remove="Data\ReferenceBank\*.json" />
+    <EmbeddedResource Include="Data\ReferenceBank\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.12" />
+    <PackageReference Include="Microsoft.ML" Version="5.0.0" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.12.2" />
+  </ItemGroup>
+
+</Project>

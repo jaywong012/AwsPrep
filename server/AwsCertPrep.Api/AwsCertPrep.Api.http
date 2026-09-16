@@ -1,0 +1,56 @@
+@host = http://localhost:5176
+@user = local
+
+### Health + active AI provider
+GET {{host}}/api/health
+
+### Certifications with domain weights and bank counts
+GET {{host}}/api/certifications
+
+### Generate questions (falls back to the template bank when Ai:Provider is Offline)
+POST {{host}}/api/questions/generate
+Content-Type: application/json
+
+{
+  "certificationCode": "AIF-C01",
+  "difficulty": "Hard",
+  "count": 5,
+  "topicHint": "Amazon Bedrock guardrails and inference parameters"
+}
+
+### Browse the question bank
+GET {{host}}/api/questions?certificationCode=AIF-C01&take=10
+
+### Start a 10-question practice set
+POST {{host}}/api/exams
+Content-Type: application/json
+X-User-Key: {{user}}
+
+{
+  "certificationCode": "AIF-C01",
+  "mode": "Practice",
+  "questionCount": 10
+}
+
+### Answer a question (replace both ids with values from the session above)
+POST {{host}}/api/exams/00000000-0000-0000-0000-000000000000/answers
+Content-Type: application/json
+X-User-Key: {{user}}
+
+{
+  "questionId": "00000000-0000-0000-0000-000000000000",
+  "selectedLabels": ["A"],
+  "secondsSpent": 42
+}
+
+### Score the session (idempotent)
+POST {{host}}/api/exams/00000000-0000-0000-0000-000000000000/submit
+X-User-Key: {{user}}
+
+### Completed sessions
+GET {{host}}/api/exams/history?certificationCode=AIF-C01
+X-User-Key: {{user}}
+
+### ML.NET readiness projection
+GET {{host}}/api/insights/AIF-C01/readiness
+X-User-Key: {{user}}
