@@ -18,13 +18,21 @@ const MASTERY_UI: Record<MasteryStatus, { label: string; hint: string; tone: str
   Strong: { label: 'Strong', hint: 'You answer these reliably', tone: 'strong' },
 }
 
-type Filter = 'next' | 'weak' | 'unread' | 'all'
+/**
+ * The list is filtered by what a lesson teaches, not by how well you are doing at it.
+ *
+ * The exam rewards two habits that do not mix well in one sitting: recognising which AWS service
+ * solves a described problem is recall and drills well in bulk, while applying a principle is
+ * reasoning and wants thinking time. Commercial is kept apart from both because support plans and
+ * purchasing options are neither - they are things you buy, memorised as a table.
+ */
+type Kind = 'all' | 'Service' | 'Concept' | 'Commercial'
 
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: 'next', label: 'Study next' },
-  { id: 'weak', label: 'Weak spots' },
-  { id: 'unread', label: 'Not done' },
-  { id: 'all', label: 'All topics' },
+const KINDS: { id: Kind; label: string; hint: string }[] = [
+  { id: 'all', label: 'Everything', hint: 'The whole curriculum, in study order' },
+  { id: 'Service', label: 'Services', hint: 'Something you deploy, configure or call' },
+  { id: 'Concept', label: 'Concepts', hint: 'An idea you apply — nothing to launch' },
+  { id: 'Commercial', label: 'Buying & support', hint: 'How you pay for AWS and get help' },
 ]
 
 export default function Lessons({ certs }: { certs: Certs }) {
@@ -32,7 +40,8 @@ export default function Lessons({ certs }: { certs: Certs }) {
 
   const [data, setData] = useState<LessonsResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<Filter>('next')
+  const [kind, setKind] = useState<Kind>('all')
+  const [notDoneOnly, setNotDoneOnly] = useState(false)
   const [category, setCategory] = useState<string>('')
 
   const load = useCallback(async () => {
@@ -55,23 +64,20 @@ export default function Lessons({ certs }: { certs: Certs }) {
     [data],
   )
 
+  // The server has already ranked the list, so filtering only ever removes rows - the order a
+  // learner sees is still "what to study next" whichever filters are on.
   const visible = useMemo(() => {
-    const topics = data?.topics ?? []
-    const byCategory = category ? topics.filter((t) => t.category === category) : topics
+    let topics = data?.topics ?? []
+    if (kind !== 'all') topics = topics.filter((t) => t.kind === kind)
+    if (category) topics = topics.filter((t) => t.category === category)
+    if (notDoneOnly) topics = topics.filter((t) => !t.completed)
+    return topics
+  }, [data, kind, category, notDoneOnly])
 
-    switch (filter) {
-      case 'weak':
-        return byCategory.filter((t) => t.mastery.status === 'Weak' || t.mastery.status === 'Learning')
-      case 'unread':
-        return byCategory.filter((t) => !t.completed)
-      case 'all':
-        return byCategory
-      default:
-        // The server already ranked the whole list; "study next" is simply the top of it with
-        // mastered topics dropped, so the first screen is only things worth opening.
-        return byCategory.filter((t) => t.mastery.status !== 'Strong' || !t.completed).slice(0, 12)
-    }
-  }, [data, filter, category])
+  const remaining = useMemo(
+    () => (data?.topics ?? []).filter((t) => !t.completed).length,
+    [data],
+  )
 
   const progressPercent =
     data && data.totalTopics > 0 ? (100 * data.completedTopics) / data.totalTopics : 0
@@ -139,28 +145,40 @@ export default function Lessons({ certs }: { certs: Certs }) {
 
       {data && data.totalTopics > 0 && (
         <>
-          <div className="segmented" role="tablist" aria-label="Lesson filter">
-            {FILTERS.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                role="tab"
-                aria-selected={filter === f.id}
-                className={filter === f.id ? 'active' : undefined}
-                onClick={() => setFilter(f.id)}
-              >
-                {f.label}
-              </button>
-            ))}
+          <div className="lesson-filters">
+            <div className="segmented" role="tablist" aria-label="What the lesson teaches">
+              {KINDS.map((k) => (
+                <button
+                  key={k.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={kind === k.id}
+                  title={k.hint}
+                  className={kind === k.id ? 'active' : undefined}
+                  onClick={() => setKind(k.id)}
+                >
+                  {k.label}
+                </button>
+              ))}
+            </div>
+
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={notDoneOnly}
+                onChange={(e) => setNotDoneOnly(e.target.checked)}
+              />
+              <span>Not done only{remaining > 0 ? ` (${remaining})` : ''}</span>
+            </label>
           </div>
 
           {visible.length === 0 ? (
             <EmptyState
               title="Nothing here"
               body={
-                filter === 'weak'
-                  ? 'No weak topics — either you are answering well, or you have not sat an exam for this certification yet.'
-                  : 'Everything in this filter is done. Try another filter.'
+                notDoneOnly
+                  ? 'Every lesson matching these filters is done. Untick "Not done only" to read them again.'
+                  : 'No lesson matches these filters. Try another kind or category.'
               }
             />
           ) : (

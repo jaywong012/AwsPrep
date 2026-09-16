@@ -235,6 +235,8 @@ public record LessonSummaryDto(
     string Slug,
     string Title,
     string Category,
+    /// <summary>Service, Concept or Commercial - see LessonCatalog.LessonKind.</summary>
+    string Kind,
     string? DomainName,
     string Purpose,
     bool IsCore,

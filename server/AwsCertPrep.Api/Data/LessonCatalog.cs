@@ -27,6 +27,48 @@ namespace AwsCertPrep.Api.Data;
 /// </summary>
 public static class LessonCatalog
 {
+    /// <summary>
+    /// What kind of thing a lesson teaches, which is a different question from which exam domain
+    /// it belongs to. The exam rewards two different study habits and they do not mix well in one
+    /// sitting: recognising which AWS service solves a described problem is recall and drills well
+    /// in bulk, while applying a principle is reasoning and needs thinking time. Splitting the list
+    /// this way lets a learner do one or the other deliberately.
+    /// </summary>
+    public enum LessonKind
+    {
+        /// <summary>Something you deploy, configure or call. Amazon S3, AWS KMS, AWS Cost Explorer.</summary>
+        Service,
+
+        /// <summary>An idea you apply; there is nothing to launch. Capex versus opex, loose coupling.</summary>
+        Concept,
+
+        /// <summary>How you buy AWS and get help with it. Support plans, Savings Plans, AWS Marketplace.</summary>
+        Commercial,
+    }
+
+    /// <summary>
+    /// Category to kind. Kept as one map rather than a field on all 103 topics: the category
+    /// already carries the distinction, so a per-topic field would be the same information written
+    /// out a hundred times and free to drift.
+    /// </summary>
+    private static readonly Dictionary<string, LessonKind> KindByCategory = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Architecture"] = LessonKind.Concept,
+        ["Cloud economics"] = LessonKind.Concept,
+        ["Cloud fundamentals"] = LessonKind.Concept,
+        ["Design principles"] = LessonKind.Concept,
+        ["Global infrastructure"] = LessonKind.Concept,
+        ["Migration"] = LessonKind.Concept,
+        ["Shared responsibility"] = LessonKind.Concept,
+
+        ["Pricing models"] = LessonKind.Commercial,
+        ["Support"] = LessonKind.Commercial,
+    };
+
+    /// <summary>Anything not named above is a service, which is the large majority.</summary>
+    public static LessonKind KindOf(string category) =>
+        KindByCategory.TryGetValue(category, out var kind) ? kind : LessonKind.Service;
+
     public record CatalogTopic(
         string Domain,
         string Category,
@@ -114,7 +156,7 @@ public static class LessonCatalog
                 "Not a service. This is one of the six advantages of cloud computing the exam asks you to recognise.",
                 "https://docs.aws.amazon.com/whitepapers/latest/aws-overview/six-advantages-of-cloud-computing.html", null, true),
 
-            new(Concepts, "Cloud economics", "licensing-and-byol", "Licensing on AWS and Bring Your Own License", "AWS License Manager,BYOL,License Included",
+            new(Concepts, "Cloud economics", "licensing-and-byol", "Licensing on AWS and Bring Your Own License", "AWS License Manager,BYOL,License Included,AWS Marketplace",
                 "Two ways to pay for commercial software on AWS: license-included, where the licence cost is built into the hourly rate (Windows instances, Amazon RDS for SQL Server), and bring your own license (BYOL), where you carry an existing licence across. AWS License Manager tracks entitlements and stops you exceeding them.",
                 "AWS License Manager itself is free; you pay for the underlying resources, and for license-included the licence is inside the hourly price.",
                 "https://docs.aws.amazon.com/license-manager/latest/userguide/license-manager.html", "https://aws.amazon.com/license-manager/pricing/", false),
@@ -124,7 +166,7 @@ public static class LessonCatalog
                 "Not a service. The usual exam framing is choosing Amazon RDS over a database installed on Amazon EC2, and being asked why.",
                 "https://docs.aws.amazon.com/whitepapers/latest/aws-overview/six-advantages-of-cloud-computing.html", null, true),
 
-            new(Concepts, "Design principles", "right-sizing", "Right-sizing: matching capacity to demand", "Right-sizing,AWS Compute Optimizer",
+            new(Concepts, "Design principles", "right-sizing", "Right-sizing: matching capacity to demand", "Right-sizing,AWS Compute Optimizer,AWS Cost Explorer",
                 "Choosing the smallest resource that still meets the requirement, and revisiting that choice as demand changes. Over-provisioning is the most common source of cloud waste, because a habit carried over from buying hardware - size for the peak, plus headroom - costs money every hour in a model billed by the hour.",
                 "Not a service. AWS Compute Optimizer and AWS Cost Explorer produce the right-sizing recommendations.",
                 "https://docs.aws.amazon.com/whitepapers/latest/cost-optimization-right-sizing/cost-optimization-right-sizing.html", null, true),
@@ -134,17 +176,17 @@ public static class LessonCatalog
                 "Not a service. The exam usually describes an architecture and asks which change removes the single point of failure.",
                 "https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html", null, true),
 
-            new(Concepts, "Design principles", "horizontal-versus-vertical-scaling", "Horizontal versus vertical scaling", "Scaling out,Scaling up,Horizontal scaling,Vertical scaling",
+            new(Concepts, "Design principles", "horizontal-versus-vertical-scaling", "Horizontal versus vertical scaling", "Scaling out,Scaling up,Horizontal scaling,Vertical scaling,Amazon EC2 Auto Scaling,Elastic Load Balancing",
                 "Scaling out (horizontal) adds more instances and is how the cloud normally grows; scaling up (vertical) moves to a larger instance and eventually hits the biggest size available. Horizontal scaling also improves availability, because the work is already spread over several machines.",
                 "Not a service. The exam tests which term matches a described change.",
                 "https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html", null, true),
 
-            new(Concepts, "Design principles", "serverless-as-a-design-choice", "Serverless as a design choice", "Serverless",
+            new(Concepts, "Design principles", "serverless-as-a-design-choice", "Serverless as a design choice", "Serverless,AWS Lambda,AWS Fargate",
                 "Serverless means there is no server for you to provision, patch or scale: AWS runs the capacity, it scales with demand automatically, and you are billed for what you actually use rather than for uptime. AWS Lambda, AWS Fargate, Amazon S3, Amazon SQS and Amazon DynamoDB on-demand are the usual examples.",
                 "Billed per request, per invocation or per unit of work rather than per hour of a running instance. Idle costs nothing.",
                 "https://docs.aws.amazon.com/lambda/latest/dg/welcome.html", null, true),
 
-            new(Concepts, "Cloud fundamentals", "iaas-paas-saas", "Cloud service models: IaaS, PaaS, and SaaS", "IaaS,PaaS,SaaS",
+            new(Concepts, "Cloud fundamentals", "iaas-paas-saas", "Cloud service models: IaaS, PaaS, and SaaS", "IaaS,PaaS,SaaS,Cloud Service Models,Infrastructure as a Service,Platform as a Service,Software as a Service",
                 "Three levels of what AWS runs for you. Infrastructure as a service hands you the building blocks and you manage the operating system upward (Amazon EC2). Platform as a service runs the platform and you supply the application (AWS Elastic Beanstalk, Amazon RDS). Software as a service is the finished application (Amazon WorkSpaces, Amazon Chime).",
                 "Not a service. The exam gives an example and asks which model it is, and the answer tracks how much you still manage.",
                 "https://docs.aws.amazon.com/whitepapers/latest/aws-overview/types-of-cloud-computing.html", null, true),
@@ -175,7 +217,7 @@ public static class LessonCatalog
                 "No additional charge.",
                 "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html", null, true),
 
-            new(Security, "Identity", "root-user-and-mfa", "The root user and multi-factor authentication", "Multi-factor authentication",
+            new(Security, "Identity", "root-user-and-mfa", "The root user and multi-factor authentication", "Multi-factor authentication,MFA,Root user,AWS Identity and Access Management,AWS IAM",
                 "The root user has unrestricted access and should be locked down: enable MFA, do not create access keys for it, and use an IAM identity for day-to-day work.",
                 "No additional charge; virtual MFA applications are free.",
                 "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html", null, true),
@@ -277,17 +319,17 @@ public static class LessonCatalog
                 "No additional charge for the service itself.",
                 "https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html", null, true),
 
-            new(Security, "Identity", "least-privilege", "Least privilege and how policies are evaluated", "Least privilege,IAM policy,Identity-based policy,Resource-based policy",
+            new(Security, "Identity", "least-privilege", "Least privilege and how policies are evaluated", "Least privilege,IAM policy,Identity-based policy,Resource-based policy,AWS Identity and Access Management,AWS IAM",
                 "Granting only the permissions a task actually needs, and no more. Permissions come from identity-based policies attached to users, groups and roles, and from resource-based policies attached to things like S3 buckets. Everything is denied by default, an allow anywhere grants access, and an explicit deny beats every allow.",
                 "No charge for IAM or its policies. IAM Access Analyzer reports permissions that are broader than intended.",
                 "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html", null, true),
 
-            new(Security, "Identity", "credentials-and-rotation", "Access keys, password policies, and rotation", "Access key,Password policy,Credential rotation",
+            new(Security, "Identity", "credentials-and-rotation", "Access keys, password policies, and rotation", "Access key,Password policy,Credential rotation,AWS Secrets Manager,AWS Identity and Access Management,AWS IAM",
                 "The credential types and how to keep them safe: passwords and MFA for people signing in to the console, access keys for programmatic calls, and a password policy that sets length and complexity for the account. Long-lived access keys should be rotated and, wherever possible, replaced by a role that issues temporary credentials.",
                 "No charge. The strongest answer on the exam is usually to stop using a long-lived key at all and assume a role instead.",
                 "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html", null, true),
 
-            new(Security, "Encryption", "encryption-at-rest-and-in-transit", "Encryption at rest and in transit", "Encryption at rest,Encryption in transit,SSE-S3,SSE-KMS,TLS",
+            new(Security, "Encryption", "encryption-at-rest-and-in-transit", "Encryption at rest and in transit", "Encryption at rest,Encryption in transit,SSE-S3,SSE-KMS,TLS,AWS Key Management Service,AWS KMS,AWS Certificate Manager",
                 "Two different protections that the exam keeps apart. At rest means the stored copy is encrypted on disk - S3 server-side encryption, an encrypted EBS volume, an encrypted RDS instance. In transit means the data is encrypted while it moves over a network, which in practice means TLS, with certificates from AWS Certificate Manager.",
                 "Encryption at rest is generally free; you pay for the AWS KMS keys and requests when a customer managed key is used.",
                 "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingEncryption.html", null, true),
@@ -307,7 +349,7 @@ public static class LessonCatalog
                 "Billed per GB of log data ingested and analysed.",
                 "https://docs.aws.amazon.com/detective/latest/userguide/what-is-detective.html", "https://aws.amazon.com/detective/pricing/", false),
 
-            new(Security, "Compliance", "compliance-programs-and-data-residency", "Compliance programs, data residency, and data sovereignty", "Compliance program,Data residency,Data sovereignty,SOC,PCI DSS,ISO 27001,HIPAA,GDPR",
+            new(Security, "Compliance", "compliance-programs-and-data-residency", "Compliance programs, data residency, and data sovereignty", "Compliance program,Data residency,Data sovereignty,SOC,PCI DSS,ISO 27001,HIPAA,GDPR,AWS Artifact,AWS Audit Manager",
                 "AWS is independently audited against programs such as SOC, PCI DSS, ISO 27001, HIPAA and FedRAMP, and the resulting reports are what an auditor wants to see. You choose the Region your data is stored in, and AWS does not move your content out of that Region on its own - which is how a data residency requirement is met.",
                 "Not a service. The reports themselves are downloaded free of charge through AWS Artifact.",
                 "https://aws.amazon.com/compliance/programs/", null, true),
@@ -363,7 +405,7 @@ public static class LessonCatalog
                 "https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html",
                 "https://aws.amazon.com/s3/pricing/", true),
 
-            new(Tech, "Storage", "s3-storage-classes", "S3 storage classes and lifecycle policies", "Amazon S3 Glacier",
+            new(Tech, "Storage", "s3-storage-classes", "S3 storage classes and lifecycle policies", "Amazon S3 Glacier,Amazon S3,S3 Standard-IA,S3 Intelligent-Tiering,S3 Lifecycle",
                 "Standard, Intelligent-Tiering, Standard-IA, One Zone-IA, Glacier Instant Retrieval, Glacier Flexible Retrieval and Glacier Deep Archive, with lifecycle rules to move objects between them as they age. S3 Express One Zone also exists for single-digit-millisecond access, but the exam concentrates on the seven above.",
                 "Cost per GB falls as retrieval time rises; the archive classes add a retrieval charge.",
                 "https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html",
@@ -545,7 +587,7 @@ public static class LessonCatalog
                 "https://docs.aws.amazon.com/vpc/latest/privatelink/what-is-privatelink.html", "https://aws.amazon.com/privatelink/pricing/", false),
 
             // ---------- Domain 4: Billing, Pricing, and Support ----------
-            new(Billing, "Pricing models", "aws-pricing-fundamentals", "How AWS pricing works", "AWS Billing",
+            new(Billing, "Pricing models", "aws-pricing-fundamentals", "How AWS pricing works", "AWS Billing,AWS Pricing,AWS pricing,AWS Billing and Cost Management,AWS Cloud Economics",
                 "Pay-as-you-go, save when you commit, and pay less as you use more. Compute, storage and data transfer out are the three things that drive almost every bill.",
                 "Data transfer IN is generally free; data transfer OUT to the internet is what surprises people.",
                 "https://docs.aws.amazon.com/whitepapers/latest/how-aws-pricing-works/welcome.html", null, true),
@@ -583,7 +625,7 @@ public static class LessonCatalog
                 "Your first two action-enabled budgets are free; each additional action-enabled budget costs $0.10 per day.",
                 "https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-managing-costs.html", null, true),
 
-            new(Billing, "Cost management", "cost-and-usage-report", "AWS Cost and Usage Report", "AWS Cost and Usage Report",
+            new(Billing, "Cost management", "cost-and-usage-report", "AWS Cost and Usage Report", "AWS Cost and Usage Report,AWS Cost and Usage Reports,AWS Billing",
                 "The most detailed billing data AWS publishes, delivered to Amazon S3 for analysis - line items down to the hour and the individual resource.",
                 "The report itself is free; you pay for the S3 storage it is delivered to.",
                 "https://docs.aws.amazon.com/cur/latest/userguide/what-is-cur.html", null, false),
@@ -609,12 +651,12 @@ public static class LessonCatalog
                 "https://docs.aws.amazon.com/awssupport/latest/user/aws-support-plans.html",
                 "https://aws.amazon.com/premiumsupport/pricing/", true),
 
-            new(Billing, "Support", "aws-marketplace", "AWS Marketplace", "AWS Marketplace",
+            new(Billing, "Support", "aws-marketplace", "AWS Marketplace", "AWS Marketplace,AWS Service Catalog",
                 "A catalogue of third-party software you can buy and deploy into your account, billed through your existing AWS bill.",
                 "Charges appear on your AWS invoice; some listings count toward committed spend agreements.",
                 "https://docs.aws.amazon.com/marketplace/latest/buyerguide/what-is-marketplace.html", null, false),
 
-            new(Billing, "Support", "aws-health-dashboard", "AWS Health Dashboard", "AWS Health Dashboard",
+            new(Billing, "Support", "aws-health-dashboard", "AWS Health Dashboard", "AWS Health Dashboard,AWS Health,AWS Personal Health Dashboard,AWS Service Health Dashboard",
                 "Shows the health of AWS services generally and, more usefully, the events that affect your own resources and accounts.",
                 "No charge.",
                 "https://docs.aws.amazon.com/health/latest/ug/what-is-aws-health.html", null, false),

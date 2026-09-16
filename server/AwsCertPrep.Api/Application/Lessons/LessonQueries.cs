@@ -54,6 +54,7 @@ public class ListLessonsHandler(IUnitOfWork uow, LessonReadModel read)
                 x.Topic.Slug,
                 x.Topic.Title,
                 x.Topic.Category,
+                Data.LessonCatalog.KindOf(x.Topic.Category).ToString(),
                 x.Topic.Domain?.Name,
                 x.Topic.Purpose,
                 x.Topic.IsCore,

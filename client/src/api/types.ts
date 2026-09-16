@@ -151,10 +151,14 @@ export interface LessonMastery {
   basis: MasteryBasis
 }
 
+/** What a lesson teaches: something you deploy, an idea you apply, or something you buy. */
+export type LessonKind = 'Service' | 'Concept' | 'Commercial'
+
 export interface LessonSummary {
   slug: string
   title: string
   category: string
+  kind: LessonKind
   domainName: string | null
   purpose: string
   isCore: boolean

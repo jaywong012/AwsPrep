@@ -372,36 +372,114 @@ function Section({ title, bullets, tone }: { title: string; bullets: string[]; t
   )
 }
 
-/** Answer-hidden by default, so the block is a self-test rather than a wall of answers. */
+/**
+ * One question from the bank, answerable in place.
+ *
+ * It used to render the options as plain text with a "Show answer" button, which made the block a
+ * reading exercise: the only thing you could do was be told. Recall you have actually attempted is
+ * what makes a self-test worth having, so the options are now real inputs and you commit to an
+ * answer before anything is revealed.
+ *
+ * Deliberately local: this scores against the options already in the payload and posts nothing, so
+ * it does not touch exam history or mastery. Checking yourself mid-lesson should not quietly move
+ * the readiness numbers that the exam sessions are supposed to measure.
+ */
 function PracticeQuestion({ question }: { question: Question }) {
-  const [revealed, setRevealed] = useState(false)
+  const [picked, setPicked] = useState<string[]>([])
+  const [checked, setChecked] = useState(false)
+
+  const multi = question.type === 'MultipleChoice'
+  const correctLabels = question.options.filter((o) => o.isCorrect).map((o) => o.label)
+  const isCorrect =
+    picked.length === correctLabels.length && correctLabels.every((l) => picked.includes(l))
+
+  function toggle(label: string) {
+    if (checked) return
+    setPicked((prev) =>
+      multi
+        ? prev.includes(label)
+          ? prev.filter((l) => l !== label)
+          : [...prev, label].sort()
+        : [label],
+    )
+  }
+
+  function reset() {
+    setPicked([])
+    setChecked(false)
+  }
 
   return (
     <li className="question">
+      {multi && (
+        <div className="question-head">
+          <span className="chip accent">Select all that apply</span>
+        </div>
+      )}
+
       <p className="stem">{question.stem}</p>
 
-      <ul className="options">
-        {question.options.map((o) => (
-          <li key={o.label} className={revealed && o.isCorrect ? 'correct' : undefined}>
-            <span className="opt-label" aria-hidden="true">
-              {o.label}
-            </span>
-            <span>{o.text}</span>
-          </li>
-        ))}
+      <ul className="options selectable">
+        {question.options.map((o) => {
+          const chosen = picked.includes(o.label)
+          const classes = [
+            checked ? 'locked' : '',
+            chosen ? 'picked' : '',
+            checked && o.isCorrect ? 'correct' : '',
+            checked && chosen && !o.isCorrect ? 'wrong' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')
+
+          return (
+            <li key={o.label} className={classes}>
+              <label>
+                <input
+                  type={multi ? 'checkbox' : 'radio'}
+                  // Scoped to the question, so two questions on the page cannot share a radio group.
+                  name={`practice-${question.id}`}
+                  checked={chosen}
+                  disabled={checked}
+                  onChange={() => toggle(o.label)}
+                />
+                <span className="opt-label" aria-hidden="true">
+                  {o.label}
+                </span>
+                <span>{o.text}</span>
+              </label>
+            </li>
+          )
+        })}
       </ul>
 
-      {revealed ? (
-        question.explanation && (
-          <p className="explanation">
-            <strong>Why: </strong>
-            {question.explanation}
-          </p>
-        )
+      {checked ? (
+        <>
+          <div className={`feedback${isCorrect ? '' : ' wrong'}`}>
+            <span className="verdict">
+              {isCorrect ? '✓ Correct' : `✕ Incorrect — answer: ${correctLabels.join(', ')}`}
+            </span>
+            {question.explanation && <p>{question.explanation}</p>}
+          </div>
+          <button type="button" className="small" onClick={reset}>
+            Try again
+          </button>
+        </>
       ) : (
-        <button type="button" className="small" onClick={() => setRevealed(true)}>
-          Show answer
-        </button>
+        <div className="button-row">
+          <button
+            type="button"
+            className="small primary"
+            disabled={picked.length === 0}
+            onClick={() => setChecked(true)}
+          >
+            Check answer
+          </button>
+          {/* Still reachable without attempting: revising a topic you have already learned is a
+              different job from testing yourself on it. */}
+          <button type="button" className="small" onClick={() => setChecked(true)} hidden={picked.length > 0}>
+            Show answer
+          </button>
+        </div>
       )}
     </li>
   )
