@@ -17,6 +17,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The test project exercises a few internals directly - AdminKey.Matches above all, where
+         the interesting cases are the ones a public API would never let you set up. Kept internal
+         rather than widened to public just to be testable. -->
+    <InternalsVisibleTo Include="AwsCertPrep.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
