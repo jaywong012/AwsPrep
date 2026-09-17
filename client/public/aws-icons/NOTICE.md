@@ -14,3 +14,8 @@ above to refresh them; AWS revises it roughly quarterly.
 
 Where a topic is a concept rather than a single service (the shared responsibility model, the
 migration strategies), the file is an AWS category or architecture-group icon instead.
+
+`_default.svg` is the AWS Cloud logo from the same package, copied unmodified under a name no
+lesson slug can take (a slug is lowercase letters, digits and hyphens, so it can never start
+with an underscore). `ServiceIcon` falls back to it for the 25 topics that are ideas rather than
+services - capex versus opex, least privilege - which have no service icon and never will.

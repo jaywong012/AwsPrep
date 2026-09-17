@@ -1826,6 +1826,15 @@ button.review:hover:not(:disabled) {
   color: var(--text-2);
   font-size: 0.9rem;
   max-width: var(--measure);
+
+  /* Two lines and an ellipsis. Purposes run from one line to five, and a list whose rows are
+     all different heights is hard to scan - it also means every row below a long one shifts
+     when the filters change. The full text is on the lesson itself. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .lesson-row-meta {

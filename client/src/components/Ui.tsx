@@ -160,14 +160,39 @@ export function CertPicker({
  * reason to know about it, and adding a topic means dropping one more file in that folder.
  * A topic with no icon file renders nothing rather than a broken image.
  */
+/**
+ * The AWS Cloud logo, shown for a topic with no icon of its own.
+ *
+ * 25 of the 103 CLF-C02 topics are ideas rather than services - capex versus opex, least
+ * privilege - so there is no service icon to draw and never will be. Rendering nothing left
+ * those rows with their text starting where every other row's icon was, which reads as a broken
+ * image rather than as a topic without one.
+ *
+ * The file is the AWS Cloud logo from the same official icon package as the rest, copied under
+ * a name no slug can take: a slug is lowercase letters, digits and hyphens, so it can never
+ * begin with an underscore and can never collide with this.
+ */
+const DEFAULT_ICON = '/aws-icons/_default.svg'
+
 export function ServiceIcon({ slug, title, size = 40 }: { slug: string; title: string; size?: number }) {
+  const [useDefault, setUseDefault] = useState(false)
   const [failed, setFailed] = useState(false)
+
+  // Going from one lesson to the next keeps this component mounted, so without the reset a
+  // topic that fell back once would keep showing the default for every topic after it.
+  useEffect(() => {
+    setUseDefault(false)
+    setFailed(false)
+  }, [slug])
+
+  // Nothing at all only if the default is missing too, which would otherwise retry the same
+  // broken URL forever.
   if (failed) return null
 
   return (
     <img
       className="service-icon"
-      src={`/aws-icons/${slug}.svg`}
+      src={useDefault ? DEFAULT_ICON : `/aws-icons/${slug}.svg`}
       width={size}
       height={size}
       loading="lazy"
@@ -176,7 +201,7 @@ export function ServiceIcon({ slug, title, size = 40 }: { slug: string; title: s
       alt=""
       aria-hidden="true"
       title={title}
-      onError={() => setFailed(true)}
+      onError={() => (useDefault ? setFailed(true) : setUseDefault(true))}
     />
   )
 }
