@@ -38,7 +38,7 @@ const KINDS: { id: Kind; label: string; hint: string }[] = [
   { id: 'Commercial', label: 'Buying & support', hint: 'How you pay for AWS and get help' },
 ]
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 5
 
 /**
  * Where the learner was in the list: which kind, which category, whether they were hiding what
@@ -54,6 +54,26 @@ interface ViewState {
   category: string
   notDoneOnly: boolean
   page: number
+}
+
+/**
+ * The page numbers to show: always the first and last, always the current and its neighbours,
+ * with a gap (null) standing in for the stretch between. 103 lessons five to a page is 21
+ * buttons: a strip of every number wraps onto three lines and is harder to aim at than the
+ * handful you actually want.
+ */
+function pageNumbers(current: number, total: number): (number | null)[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+
+  const pages = new Set([1, total, current, current - 1, current + 1])
+  const shown = [...pages].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b)
+
+  const out: (number | null)[] = []
+  for (const [i, n] of shown.entries()) {
+    if (i > 0 && n - shown[i - 1] > 1) out.push(null)
+    out.push(n)
+  }
+  return out
 }
 
 const VIEW_KEY = 'awscert.lessons.view'
@@ -287,6 +307,21 @@ export default function Lessons({ certs }: { certs: Certs }) {
           <CertPicker certifications={certifications} selectedCode={selectedCode} onSelect={select} />
 
           <label className="field">
+            <span>Teaches</span>
+            <select
+              value={kind}
+              onChange={(e) => setKind(e.target.value as Kind)}
+              title={KINDS.find((k) => k.id === kind)?.hint}
+            >
+              {KINDS.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.label} ({counts.perKind.get(k.id) ?? 0})
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
             <span>Category</span>
             <select value={category} onChange={(e) => setCategory(e.target.value)}>
               <option value="">All categories ({counts.allCategories})</option>
@@ -340,22 +375,6 @@ export default function Lessons({ certs }: { certs: Certs }) {
       {data && data.totalTopics > 0 && (
         <>
           <div className="lesson-filters">
-            <div className="segmented" role="tablist" aria-label="What the lesson teaches">
-              {KINDS.map((k) => (
-                <button
-                  key={k.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={kind === k.id}
-                  title={k.hint}
-                  className={kind === k.id ? 'active' : undefined}
-                  onClick={() => setKind(k.id)}
-                >
-                  {k.label} <span className="count">{counts.perKind.get(k.id) ?? 0}</span>
-                </button>
-              ))}
-            </div>
-
             <div className="filter-end">
               <label className="check">
                 <input
@@ -413,18 +432,24 @@ export default function Lessons({ certs }: { certs: Certs }) {
                     ← Previous
                   </button>
 
-                  {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      className={`page-dot${n === currentPage ? ' current' : ''}`}
-                      aria-current={n === currentPage ? 'page' : undefined}
-                      aria-label={`Page ${n} of ${pageCount}`}
-                      onClick={() => setPage(n)}
-                    >
-                      {n}
-                    </button>
-                  ))}
+                  {pageNumbers(currentPage, pageCount).map((n, i) =>
+                    n === null ? (
+                      <span key={`gap-${i}`} className="page-gap" aria-hidden="true">
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`page-dot${n === currentPage ? ' current' : ''}`}
+                        aria-current={n === currentPage ? 'page' : undefined}
+                        aria-label={`Page ${n} of ${pageCount}`}
+                        onClick={() => setPage(n)}
+                      >
+                        {n}
+                      </button>
+                    ),
+                  )}
 
                   <button
                     type="button"

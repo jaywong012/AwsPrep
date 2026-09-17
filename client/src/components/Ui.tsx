@@ -140,7 +140,9 @@ export function CertPicker({
   label?: string
 }) {
   return (
-    <label className="field">
+    // "CLF-C02 — AWS Certified Cloud Practitioner" is a long option, and a select cannot
+    // ellipsis its own value, so this field asks for more of the row than its neighbours.
+    <label className="field wide-field">
       <span>{label}</span>
       <select value={selectedCode} onChange={(e) => onSelect(e.target.value)}>
         {certifications.map((c) => (

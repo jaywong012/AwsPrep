@@ -525,6 +525,20 @@ a {
   flex-basis: 100%;
 }
 
+/* A field whose longest option is a sentence rather than a word. It takes the larger share of
+   whatever room the row has, and wraps onto its own line rather than clipping when there is
+   not enough. */
+.field.wide-field,
+.toolbar .field.wide-field {
+  flex: 2 1 18rem;
+}
+
+/* A select cannot ellipsis its own value, so every field in a toolbar needs enough basis to
+   show its longest option - "All categories (103)" was losing its closing bracket. */
+.toolbar .field {
+  flex: 1 1 11rem;
+}
+
 select,
 input[type='text'],
 input[type='number'],
@@ -1650,28 +1664,13 @@ button.review:hover:not(:disabled) {
   box-shadow: var(--shadow-sm);
 }
 
-/* The count beside a filter choice. Dimmer and lighter than the label so the words still read
-   first and the number is there when you look for it. */
-.segmented button .count {
-  display: inline-block;
-  margin-left: 0.3rem;
-  font-weight: 600;
-  font-size: 0.78rem;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.segmented button.active .count {
-  color: var(--accent);
-}
-
 /* The two lesson filters sit on one row and wrap to two on a narrow screen, so the checkbox is
    never pushed off the side. */
 .lesson-filters {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.75rem;
 }
 
@@ -1725,6 +1724,13 @@ button.review:hover:not(:disabled) {
   color: var(--text-2);
   border-color: var(--border);
   font-variant-numeric: tabular-nums;
+}
+
+.page-gap {
+  padding: 0 0.15rem;
+  color: var(--muted);
+  font-weight: 600;
+  user-select: none;
 }
 
 .page-dot.current {
