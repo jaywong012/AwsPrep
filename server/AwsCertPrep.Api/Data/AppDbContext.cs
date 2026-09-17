@@ -1,5 +1,6 @@
 using AwsCertPrep.Api.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AwsCertPrep.Api.Data;
 
@@ -14,6 +15,30 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<LessonTopic> LessonTopics => Set<LessonTopic>();
     public DbSet<LessonContent> LessonContents => Set<LessonContent>();
     public DbSet<LessonProgress> LessonProgress => Set<LessonProgress>();
+
+    /// <summary>
+    /// Every DateTime in this model is UTC, and SQL Server's datetime2 does not store that fact:
+    /// a value read back comes out as <see cref="DateTimeKind.Unspecified"/>. System.Text.Json
+    /// then writes it with no "Z", and a browser parses a timestamp with no offset as LOCAL time.
+    ///
+    /// That is not cosmetic. It broke the timed mock exam for anyone east or west of UTC: the
+    /// countdown read a start time hours in the past, computed a deadline that had already
+    /// passed, and auto-submitted the exam the moment it opened. Pinning the kind on the way out
+    /// of the database is what makes a timestamp mean the same thing on both sides of the wire.
+    /// </summary>
+    public class UtcDateTimeConverter() : ValueConverter<DateTime, DateTime>(
+        value => value,
+        value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+
+    public class NullableUtcDateTimeConverter() : ValueConverter<DateTime?, DateTime?>(
+        value => value,
+        value => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : value);
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+    {
+        builder.Properties<DateTime>().HaveConversion(typeof(UtcDateTimeConverter));
+        builder.Properties<DateTime?>().HaveConversion(typeof(NullableUtcDateTimeConverter));
+    }
 
     protected override void OnModelCreating(ModelBuilder b)
     {
