@@ -108,6 +108,11 @@ public static class SeedData
     /// Imports the embedded reference banks (real exam-style items, classified by domain and
     /// difficulty in <see cref="ReferenceBank"/>). Dedupes on the same stem hash the generator
     /// uses, so an item already present — seeded, imported or generated — is never duplicated.
+    ///
+    /// An item already imported also has its explanation and service tags refreshed from the
+    /// bank on every start: otherwise a correction to the shipped file never reaches a database
+    /// that has already been seeded, and an item imported before the service vocabulary knew a
+    /// name stays untagged - which hides it from the lesson ranking - for good.
     /// </summary>
     private static async Task SeedReferenceQuestionsAsync(
         AppDbContext db, ReferenceBank referenceBank, CancellationToken ct)
@@ -120,17 +125,23 @@ public static class SeedData
 
             if (cert is null) continue;
 
-            var existingHashes = (await db.Questions
+            var existing = await db.Questions
+                .Include(q => q.Options)
                 .Where(q => q.CertificationId == cert.Id)
-                .Select(q => q.StemHash)
-                .ToListAsync(ct)).ToHashSet();
+                .ToDictionaryAsync(q => q.StemHash, ct);
 
             var added = 0;
+            var refreshed = 0;
 
             foreach (var item in referenceBank.For(code))
             {
                 var hash = QuestionHasher.Hash(item.Stem);
-                if (!existingHashes.Add(hash)) continue;
+
+                if (existing.TryGetValue(hash, out var already))
+                {
+                    if (RefreshFromBank(already, item)) refreshed++;
+                    continue;
+                }
 
                 var domain = item.DomainName is null
                     ? null
@@ -162,9 +173,74 @@ public static class SeedData
                 added++;
             }
 
-            if (added > 0) await db.SaveChangesAsync(ct);
+            if (added > 0 || refreshed > 0) await db.SaveChangesAsync(ct);
         }
     }
+
+    /// <summary>
+    /// Copies the parts of a bank item that are corrections rather than new content onto the
+    /// question already stored for it, and reports whether anything changed.
+    ///
+    /// The explanation, the service tags, and the wording of the stem and options - but never
+    /// which option is correct, which belongs to a learner's answer history. Wording is only
+    /// copied when it normalises to what is already stored, which is exactly the typographic
+    /// repair case ("on- premises" from a PDF column wrap becoming "on-premises"): the row keeps
+    /// its identity, so nothing is orphaned. Without this, a fix to the shipped bank only ever
+    /// reaches a database that has not been seeded yet.
+    /// </summary>
+    private static bool RefreshFromBank(Question stored, ReferenceItem item)
+    {
+        if (stored.Source != QuestionSource.Reference) return false;
+
+        var explanation = Truncate(item.Explanation, 4000);
+        var tags = item.ServiceTags.Count == 0
+            ? null
+            : Truncate(string.Join(", ", item.ServiceTags), 400);
+
+        var changed = false;
+
+        if (stored.Explanation != explanation)
+        {
+            stored.Explanation = explanation;
+            changed = true;
+        }
+
+        if (tags is not null && stored.ServiceTags != tags)
+        {
+            stored.ServiceTags = tags;
+            changed = true;
+        }
+
+        if (stored.Stem != item.Stem && SameIgnoringTypography(stored.Stem, item.Stem))
+        {
+            stored.Stem = item.Stem;
+            changed = true;
+        }
+
+        foreach (var option in stored.Options)
+        {
+            var source = item.Options.FirstOrDefault(o => o.Label == option.Label);
+            if (source is null) continue;
+
+            var text = Truncate(source.Text, 1000);
+            if (option.Text == text || !SameIgnoringTypography(option.Text, text)) continue;
+
+            option.Text = text;
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    /// Whether two strings differ only in punctuation and spacing - the same comparison
+    /// <see cref="QuestionHasher"/> makes, so text that passes this never changes a stem hash.
+    /// </summary>
+    private static bool SameIgnoringTypography(string left, string right) =>
+        string.Equals(
+            new string(left.Where(char.IsLetterOrDigit).ToArray()),
+            new string(right.Where(char.IsLetterOrDigit).ToArray()),
+            StringComparison.OrdinalIgnoreCase);
 
     private static string Truncate(string value, int max) =>
         value.Length <= max ? value : value[..max];
@@ -378,7 +454,7 @@ public static class SeedData
             Difficulty.Easy, "Amazon Bedrock,Guardrails"),
 
         new("AIF-C01", "Fundamentals of AI and ML",
-            "Select the two situations that indicate a supervised learning problem.",
+            "Which situations indicate a supervised learning problem? (Select TWO.)",
             [
                 "Predicting next month's sales from labelled historical sales data",
                 "Classifying support tickets using a dataset of tickets with known categories",
@@ -451,7 +527,7 @@ public static class SeedData
             Difficulty.Easy, "Amazon S3"),
 
         new("CLF-C02", "Security and Compliance",
-            "Select the two AWS services that help detect suspicious activity and evaluate resource compliance respectively.",
+            "Which AWS services help detect suspicious activity and evaluate resource compliance, respectively? (Select TWO.)",
             [
                 "Amazon GuardDuty",
                 "AWS Config",

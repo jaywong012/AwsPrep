@@ -15,6 +15,62 @@ public static class QuestionHasher
     }
 }
 
+/// <summary>
+/// Whether two stems ask the same question in different words.
+///
+/// <see cref="QuestionHasher"/> only catches a stem repeated character for character, and a
+/// model asked repeatedly to cover the same blueprint does not repeat itself that exactly - it
+/// writes "Which pillar of the AWS Well-Architected Framework focuses on..." once and "Which
+/// AWS Well-Architected Framework pillar focuses on..." the next time. Both land in the bank,
+/// and a practice set can then draw the pair.
+///
+/// The measure is the overlap of the meaningful words, which ignores word order and the
+/// framing words every stem shares ("a company wants to", "which AWS service should").
+/// </summary>
+public static class StemSimilarity
+{
+    /// <summary>
+    /// Overlap at or above this is a rewording rather than a new question. Calibrated against
+    /// the existing bank: real paraphrase pairs sit at 0.75 and up, while two genuinely
+    /// different questions about one service stay below 0.6.
+    /// </summary>
+    public const double DuplicateThreshold = 0.72;
+
+    private static readonly HashSet<string> Framing = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "a", "an", "the", "of", "to", "for", "and", "or", "in", "on", "with", "its", "it", "is",
+        "are", "that", "which", "company", "wants", "needs", "use", "using", "should", "aws",
+        "service", "following", "what", "does", "can", "will", "meet", "these", "this",
+        "requirements", "requirement", "select", "two", "three",
+    };
+
+    /// <summary>The meaningful words of a stem, lowercased and deduplicated.</summary>
+    public static HashSet<string> Fingerprint(string stem)
+    {
+        var words = stem
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(w => new string(w.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant())
+            .Where(w => w.Length > 0 && !Framing.Contains(w));
+
+        return new HashSet<string>(words, StringComparer.Ordinal);
+    }
+
+    /// <summary>Jaccard overlap of two fingerprints: 1.0 is the same words, 0.0 shares none.</summary>
+    public static double Overlap(HashSet<string> left, HashSet<string> right)
+    {
+        if (left.Count == 0 || right.Count == 0) return 0;
+
+        var shared = left.Count(right.Contains);
+        return (double)shared / (left.Count + right.Count - shared);
+    }
+
+    public static bool IsRewordingOfAny(string stem, IEnumerable<HashSet<string>> existing)
+    {
+        var fingerprint = Fingerprint(stem);
+        return existing.Any(e => Overlap(fingerprint, e) >= DuplicateThreshold);
+    }
+}
+
 /// <summary>Raw shape returned by the LLM before validation/persistence.</summary>
 public class GeneratedQuestion
 {

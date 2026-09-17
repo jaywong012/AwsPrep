@@ -56,7 +56,7 @@ public static partial class AwsServiceVocabulary
         // in short options ("AWS KMS", "Amazon EBS"), so an item is not left untagged.
         "AWS KMS", "AWS IAM", "AWS STS", "AWS ACM", "AWS RAM", "AWS CAF", "AWS DMS", "AWS SSO",
         "Amazon EBS", "Amazon QLDB", "Amazon MSK", "Amazon ECR",
-        "AWS Knowledge Center", "AWS re:Post",
+        "AWS Knowledge Center", "AWS re:Post", "IAM credential report",
     ];
 
     private static readonly Regex[] Patterns = Names

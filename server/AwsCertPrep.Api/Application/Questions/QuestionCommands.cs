@@ -82,12 +82,17 @@ public class GenerateQuestionsHandler(
 
         // Hashes already persisted plus hashes added in this batch, so a model repeating itself
         // inside one response cannot violate the unique index.
-        var seenHashes = (await questions
-                .Query()
-                .Where(q => q.CertificationId == cert.Id)
-                .Select(q => q.StemHash)
-                .ToListAsync(ct))
-            .ToHashSet();
+        var stored = await questions
+            .Query()
+            .Where(q => q.CertificationId == cert.Id)
+            .Select(q => new { q.StemHash, q.Stem })
+            .ToListAsync(ct);
+
+        var seenHashes = stored.Select(q => q.StemHash).ToHashSet();
+
+        // The hash only catches an exact repeat. A model given the same blueprint twice tends to
+        // reword instead, so the stems are also compared on their meaningful words.
+        var seenFingerprints = stored.Select(q => StemSimilarity.Fingerprint(q.Stem)).ToList();
 
         foreach (var generated in result.Questions)
         {
@@ -105,6 +110,15 @@ public class GenerateQuestionsHandler(
                 duplicates++;
                 continue;
             }
+
+            if (StemSimilarity.IsRewordingOfAny(generated.Stem, seenFingerprints))
+            {
+                logger.LogInformation("Rejected a generated question as a rewording of one already in the bank.");
+                duplicates++;
+                continue;
+            }
+
+            seenFingerprints.Add(StemSimilarity.Fingerprint(generated.Stem));
 
             var domain = ResolveDomain(cert, targetDomain, generated.Domain);
             var correctCount = generated.Options.Count(o => o.IsCorrect);

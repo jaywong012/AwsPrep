@@ -110,7 +110,7 @@ public class OfflineQuestionGenerator : IQuestionGenerator
             "Amazon Bedrock"),
 
         new("AIF-C01", "Guidelines for Responsible AI",
-            "Which two practices most directly reduce the risk of harmful bias in a deployed ML model?",
+            "Which practices most directly reduce the risk of harmful bias in a deployed ML model? (Select TWO.)",
             [
                 "Analysing feature and label imbalance with Amazon SageMaker Clarify",
                 "Monitoring prediction distributions per demographic segment after launch",

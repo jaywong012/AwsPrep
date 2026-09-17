@@ -14,7 +14,7 @@ Google Gemini or Groq (free tier) for generation · ML.NET for readiness predict
 | Area | What it does |
 | --- | --- |
 | **Reference bank** | 74 real CLF-C02 exam-style items, extracted from `CLF-C02.pdf` and shipped with the API. Each one is classified into its official domain, given a difficulty from its shape, and tagged with the AWS services it tests. All 74 pass the app's own item-format audit, which is the evidence that the format rules match the real exam. |
-| **Question generation** | Prompts a free-tier LLM with the official exam blueprint (domains + weights) **plus three real items from the reference bank as style exemplars, and the blueprint topics the bank is still thin on**, then validates every returned item (option count, exactly-one/two correct, no duplicate options, explanation present) and dedupes by normalised stem hash before saving. |
+| **Question generation** | Prompts a free-tier LLM with the official exam blueprint (domains + weights) **plus three real items from the reference bank as style exemplars, and the blueprint topics the bank is still thin on**, then validates every returned item (option count, exactly-one/two correct, no duplicate options, explanation present) and dedupes before saving — by normalised stem hash for an exact repeat, and by the overlap of the stem's meaningful words for a rewording of a question already in the bank. |
 | **Question bank** | Browse/filter by certification, domain and difficulty; show answers; delete bad items. |
 | **Practice mode** | Immediate per-question feedback with explanation. |
 | **Timed mock exam** | Official question count and duration, countdown with auto-submit, feedback withheld until scored. |
@@ -40,7 +40,11 @@ from it, which is what stops a free-tier model from drifting into textbook-flavo
    why the strongest distractor loses.
 
 Duplicate avoidance also prefers questions from the domain being generated for, since those are
-the ones a new item is most likely to re-tread.
+the ones a new item is most likely to re-tread. A returned item is then dropped if it is a
+rewording of one already stored — a stem hash only catches a character-for-character repeat,
+and a model asked to cover the same blueprint twice rewrites rather than repeats ("Which pillar
+of the Well-Architected Framework focuses on…" / "Which Well-Architected Framework pillar focuses
+on…"). Both used to land in the bank, and one practice set could then draw the pair.
 
 To rebuild the bank from a PDF (`pdftotext` comes with poppler / Xpdf):
 
@@ -274,6 +278,7 @@ authenticated subject when you do.
   **Production deployment** for what that does and does not protect.
 - Readiness confidence is the cross-validated AUC of the trained model; with a small answer
   history it stays near 0.5–0.6, which is honest rather than flattering.
-- `Microsoft.OpenApi` reports advisory GHSA-v5pm-xwqc-g5wc. It only affects apps that *parse*
-  untrusted OpenAPI documents; this project only emits one. Remove `AddOpenApi()`/`MapOpenApi()`
-  if you need a clean audit.
+- `dotnet list package --vulnerable --include-transitive` and `npm audit` are both clean as of
+  the pinned versions here. The earlier `Microsoft.OpenApi` advisory (GHSA-v5pm-xwqc-g5wc) is
+  fixed in 2.12.2, which is what this project references. The OpenAPI document is only mapped in
+  Development regardless, so nothing serves it in production.

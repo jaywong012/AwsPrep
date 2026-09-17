@@ -55,7 +55,16 @@ def strip_noise(text):
 
 
 def collapse(text):
-    return re.sub(r"\s+", " ", text).strip()
+    return rejoin_wrapped(re.sub(r"\s+", " ", text).strip())
+
+
+def rejoin_wrapped(text):
+    """Repairs a hyphenated word the PDF broke across a column wrap ("on- premises").
+
+    Only a lowercase letter on each side of "- " is joined, so a dash used as punctuation
+    ("Trusted Advisor - the plan decides") and a capitalised name are both left alone.
+    """
+    return re.sub(r"(?<=[a-z])- (?=[a-z])", "-", text)
 
 
 def clean_explanation(text):

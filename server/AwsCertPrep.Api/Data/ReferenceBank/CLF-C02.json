@@ -23,7 +23,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "The transfer of data from the Snowball Edge appliance into Amazon S3.",
+  "explanation": "Importing data from a Snowball Edge device into Amazon S3 is free. You are charged a service fee per job, which covers 10 days of on-site use, and a per-day fee after that; data transferred out of S3 to a device is charged at normal data transfer rates.",
   "references": []
  },
  {
@@ -50,7 +50,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "Amazon Inspector is an automated vulnerability management service that helps improve the security and compliance of applications deployed on AWS. Amazon Inspector automatically assesses applications for exposure, vulnerabilities, and deviations from best practices. After performing an assessment, Amazon Inspector produces a detailed list of security findings prioritized by level of severity. Vulnerability / Application Vulnerability",
+  "explanation": "Amazon Inspector runs automated vulnerability scans of the software on EC2 instances, container images and Lambda functions, and reports findings ranked by severity. Trusted Advisor checks account configuration against best practices but does not scan for application vulnerabilities, and GuardDuty detects threat activity in logs rather than unpatched software.",
   "references": [
    "https://aws.amazon.com/inspector/"
   ]
@@ -106,7 +106,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "Have the EC2 instance assume a role to obtain the privileges to upload the file.",
+  "explanation": "An EC2 instance gets credentials by assuming an IAM role through an instance profile, so AWS issues short-lived credentials and rotates them automatically. Every other option stores a long-lived access key on the instance or opens the bucket to everyone.",
   "references": [
    "https://repost.aws/knowledge-center/ec2-instance-access-s3-bucket"
   ]
@@ -218,7 +218,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "A is incorrect because when we set up an instance of ec2 we choose the operating system. B is incorrect because we are configuring and running the database on the ec2 instances so that would be our responsibility. D is incorrect because the firewall rules are our job. C is correct because the physical infrastructure where the ec2 instances run is amazon's responsibility.",
+  "explanation": "AWS is responsible for the physical infrastructure the EC2 instances run on. Running a database yourself on EC2 leaves you with the guest operating system, the database software, its availability and the security group rules.",
   "references": []
  },
  {
@@ -250,7 +250,7 @@
    "A",
    "E"
   ],
-  "explanation": "A.AWS Cost Explorer. E.AWS Compute Optimizer. rightsizing.html",
+  "explanation": "Cost Explorer surfaces EC2 rightsizing recommendations from your own usage history, and Compute Optimizer analyses utilisation metrics to recommend a better instance type or size. Billing Conductor produces custom billing views, CodeGuru reviews code, and SageMaker builds models - none of them size instances.",
   "references": [
    "https://aws.amazon.com/compute-optimizer/"
   ]
@@ -284,7 +284,7 @@
    "C",
    "D"
   ],
-  "explanation": "C & D are correct. Benefits of Trusted Advisor:• Cost optimization - Trusted Advisor can help you save cost with actionable recommendations by analyzing usage, configuration and spend.• Performance - Trusted Advisor can help improve the performance of your services with actionable recommendations by analyzing usage and configuration.• Security - Trusted Advisor can help improve the security of your AWS environment by suggesting foundational security best practices curated by security experts.• Fault tolerance - Trusted Advisor can help improve the reliability of your services. • Service quotas - Service quotas are the maximum number of resources that you can create in an AWS account.",
+  "explanation": "Trusted Advisor inspects the account and returns recommendations across cost optimization, performance, security, fault tolerance and service limits, so spotting underutilised resources and flagging security weaknesses are both benefits. It does not orchestrate containers, manage encryption keys, or enforce tagging.",
   "references": [
    "https://aws.amazon.com/premiumsupport/technology/trusted-advisor/"
   ]
@@ -313,7 +313,7 @@
   "correct": [
    "A"
   ],
-  "explanation": "Elimination of expenses for running and maintaining data centers.",
+  "explanation": "Moving to AWS removes the capital and running cost of data centres - buildings, power, cooling and hardware refresh. Operational expense is not eliminated, it becomes a variable charge, and AWS does not take over the operational controls the customer owns.",
   "references": [
    "https://docs.aws.amazon.com/whitepapers/latest/aws-overview/six-advantages-of-cloud-computing.html"
   ]
@@ -342,7 +342,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "B - AWS Service Catalog is correct. AWS Service Catalog lets you centrally manage your cloud resources to achieve governance at scale of your infrastructure as code (IaC) templates, written in CloudFormation or Terraform configurations.",
+  "explanation": "AWS Service Catalog lets you centrally manage your cloud resources to achieve governance at scale of your infrastructure as code (IaC) templates, written in CloudFormation or Terraform configurations.",
   "references": [
    "https://aws.amazon.com/servicecatalog/"
   ]
@@ -371,7 +371,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "C - AWS Cost Explorer is correct.\" AWS Cost Explorer has an easy-to-use interface that lets you visualize, understand, and manage your AWS costs and usage over time.\"",
+  "explanation": "AWS Cost Explorer has an easy-to-use interface that lets you visualize, understand, and manage your AWS costs and usage over time.",
   "references": [
    "https://aws.amazon.com/aws-cost-management/aws-cost-explorer/"
   ]
@@ -405,7 +405,7 @@
    "A",
    "D"
   ],
-  "explanation": "The answer is AD.AWS Glue is a serverless data integration service that makes it easier to discover, prepare, move, and integrate data from multiple sources for analytics, machine learning (ML), and application development. Amazon Quick Sight powers data-driven organizations with unified business intelligence (BI) at hyperscale. With Quick Sight, all users can meet varying analytic needs from the same source of truth through modern interactive dashboards, paginated reports, embedded analytics, and natural language queries.",
+  "explanation": "AWS Glue is a serverless data integration service that makes it easier to discover, prepare, move, and integrate data from multiple sources for analytics, machine learning (ML), and application development. Amazon QuickSight powers data-driven organizations with unified business intelligence (BI) at hyperscale. With QuickSight, all users can meet varying analytic needs from the same source of truth through modern interactive dashboards, paginated reports, embedded analytics, and natural language queries.",
   "references": [
    "https://aws.amazon.com/quicksight/",
    "https://aws.amazon.com/glue/"
@@ -464,7 +464,7 @@
   "correct": [
    "D"
   ],
-  "explanation": "D - On-Demand Instances is correct. \"On-Demand Instances are recommended for:• Users that prefer the low cost and flexibility of EC2 without any upfront payment or long-term commitment• Applications with short- term, spiky, or unpredictable workloads that cannot be interrupted• Applications being developed or tested on EC2 for the first time\"",
+  "explanation": "On-Demand Instances are recommended for: • Users that prefer the low cost and flexibility of EC2 without any upfront payment or long-term commitment • Applications with short-term, spiky, or unpredictable workloads that cannot be interrupted • Applications being developed or tested on EC2 for the first time.",
   "references": [
    "https://aws.amazon.com/ec2/pricing/"
   ]
@@ -493,7 +493,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "B - AWS Elastic Beanstalk is correct. Deploy scalable web applications in minutes without the complexity of provisioning and managing underlying infrastructure.",
+  "explanation": "Deploy scalable web applications in minutes without the complexity of provisioning and managing underlying infrastructure.",
   "references": [
    "https://aws.amazon.com/elasticbeanstalk/"
   ]
@@ -522,7 +522,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "B - S3 Versioning is correct. \"Versioning-enabled buckets can help you recover objects from accidental deletion or overwrite.",
+  "explanation": "Versioning-enabled buckets can help you recover objects from accidental deletion or overwrite.",
   "references": [
    "https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html"
   ]
@@ -587,7 +587,7 @@
  },
  {
   "number": 21,
-  "stem": "Which AWS service or feature allows a user to establish a dedicated network connection between a company’s on- premises data center and the AWS Cloud?",
+  "stem": "Which AWS service or feature allows a user to establish a dedicated network connection between a company’s on-premises data center and the AWS Cloud?",
   "options": [
    {
     "label": "A",
@@ -694,7 +694,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "\"An internet gateway is a horizontally scaled, redundant, and highly available VPC component that allows communication between your VPC and the internet.\"",
+  "explanation": "An internet gateway is a horizontally scaled, redundant, and highly available VPC component that allows communication between your VPC and the internet.",
   "references": [
    "https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html"
   ]
@@ -786,7 +786,7 @@
    "B",
    "D"
   ],
-  "explanation": "AWS Budgets: AWS Budgets is a service that allows you to set custom cost and usage budgets for your AWS resources. You can configure a budget with a specific threshold and define actions, such as sending notifications, when that threshold is reached.D. Amazon CloudWatch: Amazon CloudWatch is a monitoring service that can be used to collect and track metrics, logs, and events from various AWS resources. It supports setting up alarms based on cost metrics, so you can create an alarm for a specific cost threshold and configure it to send notifications when the threshold is breached.",
+  "explanation": "AWS Budgets sends a notification when spend crosses a threshold you set, and a CloudWatch alarm on the billing metric does the same thing from the monitoring side. Cost Explorer and the Cost and Usage Report only report spend, and SQS is a message queue.",
   "references": []
  },
  {
@@ -813,7 +813,7 @@
   "correct": [
    "D"
   ],
-  "explanation": "1. Answer D is Correct. Key: \"service or resource provides answers to the most frequently asked security- related questions\" 2. The correct answer is D.AWS Official Knowledge Center articles and videos covering the most frequent questions and requests that we receive from AWS customers.",
+  "explanation": "The AWS Knowledge Center publishes articles and videos answering the questions AWS receives most often, including the security ones. AWS Artifact holds audit reports rather than answers, and Amazon Connect and AWS Chatbot are unrelated services.",
   "references": [
    "https://repost.aws/knowledge-center"
   ]
@@ -847,7 +847,7 @@
    "A",
    "B"
   ],
-  "explanation": "A.Configure the AWS provided security group firewall. B.Classify company assets in the AWS Cloud.",
+  "explanation": "Configuring the security group firewall and classifying your own assets are both customer responsibilities. AWS chooses where S3 stores data within a Region and patches DynamoDB, and Lambda has no EC2 instances for a customer to select.",
   "references": []
  },
  {
@@ -879,7 +879,7 @@
    "B",
    "E"
   ],
-  "explanation": "E.AWS Well-Architected helps cloud architects build secure, high-performing, resilient, and efficient infrastructure for a variety of applications and workloads. Built around six pillars— operational excellence, security, reliability, performance efficiency, cost optimization, and sustainability.",
+  "explanation": "Reliability and operational excellence are two of the six Well-Architected pillars, alongside security, performance efficiency, cost optimization and sustainability. Availability, scalability and responsive design are not pillar names.",
   "references": []
  },
  {
@@ -906,7 +906,7 @@
   "correct": [
    "A"
   ],
-  "explanation": "The answer is A. Amazon Simple Notification Service (Amazon SNS) sends notifications two ways, A2A and A2P. A2A provides high-throughput, push-based, many-to-many messaging between distributed systems, microservices, and event-driven serverless applications. These applications include Amazon Simple Queue Service (SQS), Amazon Kinesis Data Firehose, AWS Lambda, and other HTTPS endpoints. A2P functionality lets you send messages to your customers with SMS texts, push notifications, and email.",
+  "explanation": "Amazon Simple Notification Service (Amazon SNS) sends notifications two ways, A2A and A2P. A2A provides high-throughput, push-based, many-to-many messaging between distributed systems, microservices, and event-driven serverless applications. These applications include Amazon Simple Queue Service (SQS), Amazon Kinesis Data Firehose, AWS Lambda, and other HTTPS endpoints. A2P functionality lets you send messages to your customers with SMS texts, push notifications, and email.",
   "references": [
    "https://aws.amazon.com/sns/"
   ]
@@ -935,7 +935,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "The answer is B. \"Access keys are long-term credentials for an IAM user or the AWS account root user. You can use access keys to sign programmatic requests to the AWS CLI or AWS API (directly or using the AWS SDK). \"",
+  "explanation": "Access keys are long-term credentials for an IAM user or the AWS account root user. You can use access keys to sign programmatic requests to the AWS CLI or AWS API (directly or using the AWS SDK).",
   "references": [
    "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html"
   ]
@@ -996,7 +996,7 @@
    "A",
    "C"
   ],
-  "explanation": "The speed at which AWS resources are implemented. C. The ability to experiment quickly.",
+  "explanation": "Agility is about speed: how fast resources can be brought online, and how cheaply an idea can be tried and discarded. How fast AWS builds Regions is not a customer benefit, and eliminating wasted capacity and low entry cost are cost benefits, not agility.",
   "references": []
  },
  {
@@ -1023,7 +1023,7 @@
   "correct": [
    "A"
   ],
-  "explanation": "The answer is A.AWS WAF helps you protect against common web exploits and bots that can affect availability, compromise security, or consume excessive resources.",
+  "explanation": "AWS WAF helps you protect against common web exploits and bots that can affect availability, compromise security, or consume excessive resources.",
   "references": [
    "https://aws.amazon.com/waf/"
   ]
@@ -1052,7 +1052,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "The answer is C.IAM Access Analyzer helps identify resources in your organization and accounts that are shared with an external entity.",
+  "explanation": "IAM Access Analyzer helps identify resources in your organization and accounts that are shared with an external entity.",
   "references": [
    "https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html"
   ]
@@ -1110,7 +1110,7 @@
   "correct": [
    "A"
   ],
-  "explanation": "Cost of application software licenses.",
+  "explanation": "The customer keeps paying for the licences of the software it runs. The hardware, its power and the physical security of the data centre are priced into what AWS charges and are not separate customer costs.",
   "references": []
  },
  {
@@ -1137,7 +1137,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "Turn on multi-factor authentication (MFA) for added security during the login process.Enabling multi-factor authentication (MFA) for user accounts, especially for users with administrative or high-privilege access, is a crucial security best practice. MFA adds an additional layer of security by requiring users to provide two or more verification factors (typically something they know, like a password, and something they have, like a temporary MFA code from a hardware token or mobile app) before gaining access. This significantly reduces the risk of unauthorized access, even if login credentials are compromised.",
+  "explanation": "Turn on multi-factor authentication (MFA) for added security during the login process. Enabling multi-factor authentication (MFA) for user accounts, especially for users with administrative or high-privilege access, is a crucial security best practice. MFA adds an additional layer of security by requiring users to provide two or more verification factors (typically something they know, like a password, and something they have, like a temporary MFA code from a hardware token or mobile app) before gaining access. This significantly reduces the risk of unauthorized access, even if login credentials are compromised.",
   "references": []
  },
  {
@@ -1169,7 +1169,7 @@
    "B",
    "E"
   ],
-  "explanation": "B.The ability to rightsize resources as demand shifts. E.How easily resources can be procured when they are needed.",
+  "explanation": "Elasticity is capacity following demand in both directions - resources sized up and down as load shifts, and acquired the moment they are needed. Restart time, instance memory limits and the billing model are not elasticity.",
   "references": []
  },
  {
@@ -1223,7 +1223,7 @@
   "correct": [
    "A"
   ],
-  "explanation": "Managing the code within the Lambda function.",
+  "explanation": "With AWS Lambda the customer is responsible for the function code and its configuration. AWS owns the hardware, the operating system and its patching, and an idle function costs nothing, so there is nothing to shut down.",
   "references": []
  },
  {
@@ -1250,7 +1250,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "The answer is B. Amazon Athena is a serverless, interactive analytics service built on open-source frameworks, supporting open-table and file formats. Athena provides a simplified, flexible way to analyze petabytes of data where it lives. Analyze data or build applications from an Amazon Simple Storage Service (S3) data lake and 30 data sources, including on-premises data sources or other cloud systems using SQL or Python. Athena is built on open-source Trino and Presto engines and Apache Spark frameworks, with no provisioning or configuration effort required.",
+  "explanation": "Amazon Athena is a serverless, interactive analytics service built on open-source frameworks, supporting open-table and file formats. Athena provides a simplified, flexible way to analyze petabytes of data where it lives. Analyze data or build applications from an Amazon Simple Storage Service (S3) data lake and 30 data sources, including on-premises data sources or other cloud systems using SQL or Python. Athena is built on open-source Trino and Presto engines and Apache Spark frameworks, with no provisioning or configuration effort required.",
   "references": [
    "https://aws.amazon.com/athena/"
   ]
@@ -1279,7 +1279,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "The answer is C.AWS Organizations is an account management service that enables you to consolidate multiple AWS accounts into an organization that you create and centrally manage. AWS Organizations is offered at no additional charge. You are charged only for AWS resources that users and roles in your member accounts use. For example, you are charged the standard fees for Amazon EC2 instances that are used by users or roles in your member accounts.",
+  "explanation": "AWS Organizations is an account management service that enables you to consolidate multiple AWS accounts into an organization that you create and centrally manage. AWS Organizations is offered at no additional charge. You are charged only for AWS resources that users and roles in your member accounts use. For example, you are charged the standard fees for Amazon EC2 instances that are used by users or roles in your member accounts.",
   "references": [
    "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_introduction.html"
   ]
@@ -1308,7 +1308,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "The answer is C.Data architecture => PlatformEvent management => OperationsCloud fluency => PeopleStrategic partnership => Business.",
+  "explanation": "Cloud fluency is a people perspective capability. Data architecture belongs to platform, event management to operations, and strategic partnership to business.",
   "references": []
  },
  {
@@ -1340,7 +1340,7 @@
    "C",
    "D"
   ],
-  "explanation": "C.Reserved Instances. D.Savings Plans.",
+  "explanation": "Reserved Instances and Savings Plans are the two options that trade an upfront or hourly commitment for a lower rate on steady production usage. Spot is cheaper still but can be interrupted, and On-Demand and Dedicated Hosts involve no discount commitment.",
   "references": []
  },
  {
@@ -1367,7 +1367,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "AWS Regions.",
+  "explanation": "An AWS Region is the geographic choice: you pick the Region closest to your users or your current data centre and deploy Amazon RDS into it. Direct Connect is a network link, not a placement choice, and Wavelength targets 5G edge workloads.",
   "references": []
  },
  {
@@ -1394,7 +1394,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "The answer is B.AWS Pricing Calculator is a web-based planning tool that you can use to create estimates for your AWS use cases. You can use it to model your solutions before building them, explore the AWS service price points, and review the calculations behind your estimates.",
+  "explanation": "AWS Pricing Calculator is a web-based planning tool that you can use to create estimates for your AWS use cases. You can use it to model your solutions before building them, explore the AWS service price points, and review the calculations behind your estimates.",
   "references": [
    "https://docs.aws.amazon.com/pricing-calculator/latest/userguide/what-is-pricing-calculator.html"
   ]
@@ -1423,7 +1423,7 @@
   "correct": [
    "A"
   ],
-  "explanation": "Deliver the content through Amazon CloudFront.",
+  "explanation": "Amazon CloudFront caches content at edge locations close to viewers, which cuts latency without replicating the whole data set. Cross-Region replication copies objects but still serves them from a Region, and PrivateLink is for private access, not global delivery.",
   "references": []
  },
  {
@@ -1450,7 +1450,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "C seems to be correct. it is the only one that reflects cost benefits which are asked in the question. While A also mentioned cost it is contradicting the value of cloud which is trade capital expense for variable cost.",
+  "explanation": "Economies of scale mean AWS aggregates the usage of many customers and buys at a scale no single organisation can match, so the pay-as-you-go variable rate falls. The cloud trades fixed capital expense for variable expense, not the other way round.",
   "references": []
  },
  {
@@ -1531,7 +1531,7 @@
   "correct": [
    "A"
   ],
-  "explanation": "AWS Security Hub is a cloud security posture management (CSPM) service that performs automated, continuous security best practice checks against your AWS resources to help you identify misconfigurations, and aggregates your security alerts (i.e. findings) in a standardized format so that you can more easily enrich, investigate, and remediate them",
+  "explanation": "AWS Security Hub is a cloud security posture management (CSPM) service that performs automated, continuous security best practice checks against your AWS resources to help you identify misconfigurations, and aggregates your security alerts (i.e. findings) in a standardized format so that you can more easily enrich, investigate, and remediate them.",
   "references": [
    "https://aws.amazon.com/security-hub/features/?nc=sn&loc=2"
   ]
@@ -1560,7 +1560,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "\"IAM is a feature of your AWS account and is offered at no additional charge. \"",
+  "explanation": "IAM is a feature of your AWS account and is offered at no additional charge.",
   "references": [
    "https://aws.amazon.com/iam/getting-started/?nc=sn&loc=3"
   ]
@@ -1589,7 +1589,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "\" Amazon DynamoDB is a fully managed NoSQL database service that provides fast and predictable performance with seamless scalability. \"",
+  "explanation": "Amazon DynamoDB is a fully managed NoSQL database service that provides fast and predictable performance with seamless scalability.",
   "references": [
    "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html"
   ]
@@ -1618,7 +1618,7 @@
   "correct": [
    "C"
   ],
-  "explanation": "Manage database access permissions.",
+  "explanation": "Managing who can read and write the DynamoDB tables is the customer half of the shared responsibility model. DynamoDB is a managed service, so AWS provisions the hosts and patches and secures the operating system.",
   "references": []
  },
  {
@@ -1704,7 +1704,7 @@
    "A",
    "C"
   ],
-  "explanation": "Security groups C. Network ACLs Security groups are stateful firewalls that control inbound and outbound traffic at the instance level. You can configure security groups to allow or deny specific types of network traffic to and from your instances.Network ACLs (Access Control Lists) are stateless firewalls that control traffic at the subnet level. Network ACLs define rules to allow or deny traffic based on source and destination IP addresses, ports, and protocols.",
+  "explanation": "Security groups are stateful firewalls at the instance level and network ACLs are stateless firewalls at the subnet level; both can stop traffic reaching an instance. VPC flow logs, CloudWatch and CloudTrail only record what happened - none of them blocks anything.",
   "references": []
  },
  {
@@ -1844,7 +1844,7 @@
    "C",
    "D"
   ],
-  "explanation": "CD is right.Amazon AppStream 2.0 is a service for streaming desktop applications to a web browser, but it is different from full Windows virtual desktops provided by Amazon WorkSpaces.",
+  "explanation": "Amazon WorkSpaces delivers the managed Windows desktops, and AWS Site-to-Site VPN gives the remote employees the secure network connection to reach them. AppStream 2.0 streams individual applications rather than full desktops.",
   "references": []
  },
  {
@@ -1957,7 +1957,7 @@
    "B",
    "C"
   ],
-  "explanation": "EC2 Amazon Machine Images (AMIs): AMIs are used to create backups of EC2 instances, and they can be used to launch replacement instances in the event of a disaster or data loss. AMIs are essential for creating recovery points for your EC2 instances.C. Amazon Elastic Block Store (Amazon EBS) snapshots: EBS snapshots allow you to create point-in-time backups of your EBS volumes. These snapshots can be used to restore data or create new EBS volumes, making them a key component of disaster recovery for EC2 instances.",
+  "explanation": "An Amazon Machine Image captures a whole instance so a replacement can be launched from it, and EBS snapshots capture point-in-time copies of the volumes - together they are the recovery points for EC2. Reserved Instances are a pricing option, and Shield and GuardDuty are security services.",
   "references": []
  },
  {
@@ -1984,7 +1984,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "\" Using AWS Cloud Shell, a browser-based shell, you can quickly run scripts with the AWS Command Line Interface (CLI), experiment with service APIs using the AWS CLI, and use other tools to increase your productivity. The Cloud Shell icon appears in AWS Regions where Cloud Shell is available.\"",
+  "explanation": "Using AWS Cloud Shell, a browser-based shell, you can quickly run scripts with the AWS Command Line Interface (CLI), experiment with service APIs using the AWS CLI, and use other tools to increase your productivity. The Cloud Shell icon appears in AWS Regions where Cloud Shell is available.",
   "references": []
  },
  {
@@ -2040,7 +2040,7 @@
   "correct": [
    "D"
   ],
-  "explanation": "AWS Enterprise Support.",
+  "explanation": "AWS Countdown (formerly Infrastructure Event Management) is included at no extra charge with Enterprise Support, which is what covers operational readiness assessment and risk mitigation before a launch. Business Support customers can buy it separately.",
   "references": []
  },
  {
@@ -2067,7 +2067,7 @@
   "correct": [
    "B"
   ],
-  "explanation": "AWS Secrets Manager.",
+  "explanation": "AWS Secrets Manager stores database credentials and rotates them on a schedule with a built-in rotation function, so there is nothing to build. Systems Manager Parameter Store holds parameters but does not rotate database credentials for you.",
   "references": []
  },
  {

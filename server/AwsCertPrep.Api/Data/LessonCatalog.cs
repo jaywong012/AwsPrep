@@ -144,7 +144,7 @@ public static class LessonCatalog
             new(Concepts, "Cloud economics", "capex-versus-opex", "Capital expenditure versus operating expenditure", null,
                 "Buying servers is a capital expense: you pay up front for capacity you predict, own it for years, and write it down whether it is used or not. Cloud is an operating expense: you pay for what you consume, the meter stops when you stop, and there is nothing to depreciate.",
                 "Not a service. The exam describes a spending pattern and asks you to name it, or asks which model suits an unpredictable workload.",
-                "https://docs.aws.amazon.com/whitepapers/latest/how-aws-pricing-works/what-is-the-aws-pricing-model.html", null, true),
+                "https://docs.aws.amazon.com/whitepapers/latest/how-aws-pricing-works/", null, true),
 
             new(Concepts, "Cloud economics", "total-cost-of-ownership", "Total cost of ownership and the on-premises comparison", null,
                 "The full cost of running a workload, not just the server price: hardware refresh, data centre space, power, cooling, network, licences, and the staff time to run all of it. An on-premises comparison that counts only hardware understates what the cloud is being compared against.",
@@ -426,7 +426,7 @@ public static class LessonCatalog
             new(Tech, "Storage", "aws-storage-gateway", "AWS Storage Gateway", "AWS Storage Gateway",
                 "Connects an on-premises environment to AWS storage while keeping frequently used data cached locally - the answer for extending on-premises file storage without losing local performance.",
                 "Per GB stored in AWS, plus gateway usage and data transfer. The software appliance is downloaded and run on your own hardware or as a VM.",
-                "https://docs.aws.amazon.com/storagegateway/latest/userguide/WhatIsStorageGateway.html",
+                "https://docs.aws.amazon.com/filegateway/latest/files3/what-is-file-s3.html",
                 "https://aws.amazon.com/storagegateway/pricing/", true),
 
             new(Tech, "Storage", "aws-snow-family", "The AWS Snow Family", "AWS Snowball Edge,AWS Snowcone,AWS Snowmobile",
@@ -590,7 +590,7 @@ public static class LessonCatalog
             new(Billing, "Pricing models", "aws-pricing-fundamentals", "How AWS pricing works", "AWS Billing,AWS Pricing,AWS pricing,AWS Billing and Cost Management,AWS Cloud Economics",
                 "Pay-as-you-go, save when you commit, and pay less as you use more. Compute, storage and data transfer out are the three things that drive almost every bill.",
                 "Data transfer IN is generally free; data transfer OUT to the internet is what surprises people.",
-                "https://docs.aws.amazon.com/whitepapers/latest/how-aws-pricing-works/welcome.html", null, true),
+                "https://docs.aws.amazon.com/whitepapers/latest/how-aws-pricing-works/", null, true),
 
             new(Billing, "Pricing models", "ec2-purchasing-options", "EC2 purchasing options", "Reserved Instances,On-Demand Instances,Dedicated Hosts,Spot Instances",
                 "On-Demand for unpredictable short workloads, Reserved Instances and Savings Plans for steady 1- or 3-year usage, Spot for interruptible fault-tolerant work at a deep discount, Dedicated Hosts for licensing or compliance requirements.",
@@ -607,7 +607,7 @@ public static class LessonCatalog
             new(Billing, "Pricing models", "aws-free-tier", "AWS Free Tier", "AWS Free Tier",
                 "The exam tests three kinds of free offer: always free (such as Lambda's monthly requests), 12 months free for new accounts, and short-term trials. NOTE, AWS has since restructured the Free Tier around a Free plan (credits over 6 months), a Paid plan, short-term trials and 30+ always-free services. Answer exam questions with the three-type model.",
                 "Exceeding a free tier limit moves you onto standard rates without warning - set a budget.",
-                "https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-free-tier.html",
+                "https://aws.amazon.com/free/free-tier-faqs/",
                 "https://aws.amazon.com/free/", true),
 
             new(Billing, "Cost management", "aws-pricing-calculator", "AWS Pricing Calculator", "AWS Pricing Calculator",
@@ -636,7 +636,7 @@ public static class LessonCatalog
                 "https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/consolidated-billing.html", null, true),
 
             new(Billing, "Optimisation", "aws-trusted-advisor", "AWS Trusted Advisor", "AWS Trusted Advisor",
-                "Inspects your account and recommends fixes. The exam tests five categories: cost optimization, performance, security, fault tolerance and service limits.",
+                "Inspects your account and recommends fixes. The exam tests five categories: cost optimization, performance, security, fault tolerance and service limits. NOTE, the console now also has an operational excellence category; answer exam questions with the five above.",
                 "Basic Support gets all Service Limits checks plus selected Security and Fault tolerance checks; the full set needs a paid plan (the exam says Business or Enterprise; AWS now names Business Support+, Enterprise Support or Unified Operations).",
                 "https://docs.aws.amazon.com/awssupport/latest/user/trusted-advisor.html", null, true),
 
