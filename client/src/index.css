@@ -1698,13 +1698,26 @@ button.review:hover:not(:disabled) {
 
 /* Pagination under the lesson list. The page buttons reuse the exam runner's jump-dot shape so
    "pick a page" looks the same everywhere in the app. */
+/* Pinned to the foot of the viewport rather than sitting at the end of the list: with five
+   lessons to a page you would otherwise scroll past all five to reach "Next", and then scroll
+   back up to read the page you just asked for. Sticky rather than fixed, so it comes to rest in
+   its natural place above the footer once you reach the bottom instead of covering it. */
 .pager {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-  padding-top: 0.25rem;
+  justify-content: center;
+  gap: 0.6rem 0.9rem;
+  margin-top: 0.25rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-sm);
 }
 
 .pager-controls {
