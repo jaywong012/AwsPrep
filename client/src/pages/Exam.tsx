@@ -30,6 +30,17 @@ export default function Exam({ sessionId }: { sessionId?: string }) {
       setError('No exam session id in the URL.')
       return
     }
+
+    // Everything below belongs to one session. Going from one exam straight to another keeps
+    // this component mounted, so without the reset the new session inherits the old position
+    // and renders "Question 65 of 5" over an empty panel.
+    setSession(null)
+    setError(null)
+    setIndex(0)
+    setSelections({})
+    setFeedback({})
+    setSecondsLeft(null)
+
     api
       .exams.get(sessionId)
       .then((s) => {
@@ -81,7 +92,9 @@ export default function Exam({ sessionId }: { sessionId?: string }) {
     questionStart.current = Date.now()
   }, [index])
 
-  const item = session?.items[index]
+  // Clamped rather than indexed raw: an index past the end renders nothing at all, and a blank
+  // panel with a working timer is the worst way for this page to fail.
+  const item = session?.items[Math.min(index, total - 1)]
   const currentSelection = useMemo(() => (item ? (selections[item.questionId] ?? []) : []), [item, selections])
   const revealed = item ? feedback[item.questionId] : undefined
   const isLast = index === total - 1
@@ -183,8 +196,8 @@ export default function Exam({ sessionId }: { sessionId?: string }) {
   const progress = total === 0 ? 0 : (answeredCount / total) * 100
 
   return (
-    <div className="stack exam-focus">
-      <div className="exam-bar">
+    <section className="exam-panel">
+      <header className="exam-bar">
         <span className="chip accent">{session.certificationCode}</span>
         <span className={`chip${session.mode === 'Review' ? ' review' : ''}`}>{MODE_LABEL[session.mode]}</span>
 
@@ -206,22 +219,43 @@ export default function Exam({ sessionId }: { sessionId?: string }) {
             {String(secondsLeft % 60).padStart(2, '0')}
           </div>
         )}
-      </div>
+      </header>
 
-      {error && <Banner kind="error">{error}</Banner>}
+      {error && (
+        <div className="exam-notice">
+          <Banner kind="error">{error}</Banner>
+        </div>
+      )}
 
       {item && (
-        <section className="question">
-          <div className="question-head">
-            <DifficultyBadge value={item.question.difficulty} />
-            {item.question.domainName && <span className="chip">{item.question.domainName}</span>}
-            {item.question.type === 'MultipleChoice' && (
-              <span className="chip accent">Select all that apply</span>
+        <div className="exam-body">
+          <div className="exam-ask">
+            <div className="question-head">
+              <DifficultyBadge value={item.question.difficulty} />
+              {item.question.domainName && <span className="chip">{item.question.domainName}</span>}
+              {item.question.type === 'MultipleChoice' && (
+                <span className="chip accent">Select all that apply</span>
+              )}
+            </div>
+
+            <p className="stem">{item.question.stem}</p>
+
+            {/* The explanation sits under the stem, not under the options: it is about the
+                question, and the left column has the room, so revealing it does not push the
+                options or the footer around. */}
+            {revealed && (
+              <div className={`feedback${revealed.isCorrect ? '' : ' wrong'}`}>
+                <span className="verdict">
+                  {revealed.isCorrect
+                    ? '✓ Correct'
+                    : `✕ Incorrect — answer: ${revealed.correctLabels.join(', ')}`}
+                </span>
+                <p>{revealed.explanation}</p>
+              </div>
             )}
           </div>
 
-          <p className="stem">{item.question.stem}</p>
-
+          <div className="exam-answer">
           <ul className="options selectable">
             {item.question.options.map((o) => {
               const picked = currentSelection.includes(o.label)
@@ -254,15 +288,12 @@ export default function Exam({ sessionId }: { sessionId?: string }) {
             })}
           </ul>
 
-          {revealed && (
-            <div className={`feedback${revealed.isCorrect ? '' : ' wrong'}`}>
-              <span className="verdict">
-                {revealed.isCorrect ? '✓ Correct' : `✕ Incorrect — answer: ${revealed.correctLabels.join(', ')}`}
-              </span>
-              <p>{revealed.explanation}</p>
-            </div>
-          )}
+          </div>
+        </div>
+      )}
 
+      {item && (
+        <footer className="exam-foot">
           <div className="exam-actions">
             <button type="button" className="ghost" disabled={index === 0} onClick={() => setIndex((i) => i - 1)}>
               ← Previous
@@ -294,26 +325,23 @@ export default function Exam({ sessionId }: { sessionId?: string }) {
               {submitting ? 'Submitting…' : 'Finish & score'}
             </button>
           </div>
-        </section>
-      )}
 
-      <div className="card">
-        <span className="eyebrow">Jump to question</span>
-        <div className="jump-grid">
-          {session.items.map((it, i) => (
-            <button
-              key={it.questionId}
-              type="button"
-              className={`jump-dot${i === index ? ' current' : ''}${selections[it.questionId] ? ' answered' : ''}`}
-              onClick={() => setIndex(i)}
-              aria-label={`Question ${i + 1}${selections[it.questionId] ? ', answered' : ', unanswered'}`}
-              aria-current={i === index}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
-      </div>
+          <div className="jump-grid" aria-label="Jump to question">
+            {session.items.map((it, i) => (
+              <button
+                key={it.questionId}
+                type="button"
+                className={`jump-dot${i === index ? ' current' : ''}${selections[it.questionId] ? ' answered' : ''}`}
+                onClick={() => setIndex(i)}
+                aria-label={`Question ${i + 1}${selections[it.questionId] ? ', answered' : ', unanswered'}`}
+                aria-current={i === index}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        </footer>
+      )}
 
       {confirmOpen && (
         <ConfirmDialog
@@ -327,6 +355,6 @@ export default function Exam({ sessionId }: { sessionId?: string }) {
           onCancel={() => setConfirmOpen(false)}
         />
       )}
-    </div>
+    </section>
   )
 }

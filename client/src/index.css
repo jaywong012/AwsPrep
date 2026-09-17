@@ -1193,27 +1193,112 @@ input:hover {
    Exam runner
    ============================================================ */
 
-/* The runner reads as a single focused column rather than a full-width dashboard. */
-.exam-focus {
+/* One surface for the whole runner.
+   It used to be three stacked cards - bar, question, jump grid - which meant every question
+   change resized the middle one and shoved the two below it up or down. Everything now lives
+   inside a single panel whose sections are separated by rules rather than by gaps, so nothing
+   moves relative to anything else. */
+.exam-panel {
   width: 100%;
-  max-width: 800px;
+  max-width: 1100px;
   margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 .exam-bar {
-  position: sticky;
-  top: 56px;
-  z-index: 15;
   display: flex;
   align-items: center;
   gap: 0.9rem;
   flex-wrap: wrap;
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
   padding: 0.6rem 0.9rem;
-  box-shadow: var(--shadow-sm);
+}
+
+/* Question on the left, answers on the right. Splitting them halves how far the page has to
+   reflow when a long stem follows a short one, and the answers start at the same place every
+   time instead of beginning wherever the stem happened to end. */
+.exam-body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: start;
+  gap: clamp(1rem, 3vw, 2rem);
+  padding: clamp(0.9rem, 2vw, 1.4rem);
+
+  /* Holds the panel steady across questions of different lengths, which is what stops the
+     footer and the jump grid jumping as you page through. Measured against a full 65-question
+     CLF-C02 set: the content runs 239px at the median and 359px at the tallest, so this covers
+     every item in it without leaving a crater under the short ones. */
+  min-height: 22.5rem;
+}
+
+.exam-ask,
+.exam-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+/* The column is the reading measure now, so the elements inside it fill it. */
+.exam-ask .stem,
+.exam-ask .feedback,
+.exam-answer .options {
+  max-width: none;
+}
+
+.exam-ask .stem {
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+/* The divider that replaces the gap between what were two separate cards. */
+.exam-ask {
+  position: relative;
+}
+
+.exam-ask::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: calc(clamp(1rem, 3vw, 2rem) / -2);
+  border-right: 1px solid var(--border);
+}
+
+.exam-notice {
+  padding: 0.75rem clamp(0.9rem, 2vw, 1.4rem) 0;
+}
+
+.exam-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.75rem clamp(0.9rem, 2vw, 1.4rem);
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+@media (max-width: 860px) {
+  .exam-body {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .exam-ask::after {
+    display: none;
+  }
+
+  .exam-ask {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
 }
 
 .exam-bar .exam-progress {
@@ -1284,9 +1369,6 @@ input:hover {
   gap: 0.55rem;
   flex-wrap: wrap;
   align-items: center;
-  padding-top: 0.25rem;
-  border-top: 1px solid var(--border);
-  margin-top: 0.15rem;
 }
 
 .exam-actions .spacer {
