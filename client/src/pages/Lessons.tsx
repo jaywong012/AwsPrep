@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import type { LessonDetail, LessonSummary, LessonsResponse, MasteryStatus } from '../api/types'
 import type { useCertifications } from '../hooks/useCertifications'
-import { Banner, CertPicker, EmptyState, ServiceIcon, Skeleton } from '../components/Ui'
+import { Banner, CertPicker, EmptyState, ServiceIcon, Skeleton, Spinner } from '../components/Ui'
 import { Link } from '../router'
-import { getCachedLessons, invalidateLessonCache, setCachedLessons } from './lessonCache'
+import { getCachedLessons, setCachedLessons } from './lessonCache'
 import { LessonPrintDocument } from '../components/LessonPrint'
 import { printRenderedDocument } from '../components/printDocument'
 
@@ -108,6 +108,28 @@ function writeViewState(code: string, view: ViewState) {
   }
 }
 
+/** A page with a down arrow: "save these lessons to a file". */
+function PdfDownloadIcon() {
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M14 3H7a2 2 0 0 0-2 2v6M14 3l5 5M14 3v4a1 1 0 0 0 1 1h4v3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 14v6m0 0 2.5-2.5M12 20l-2.5-2.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export default function Lessons({ certs }: { certs: Certs }) {
   const { certifications, selectedCode, select } = certs
 
@@ -154,11 +176,6 @@ export default function Lessons({ certs }: { certs: Certs }) {
   useEffect(() => {
     void load()
   }, [load])
-
-  const refresh = useCallback(() => {
-    if (selectedCode) invalidateLessonCache(selectedCode)
-    void load()
-  }, [selectedCode, load])
 
   const [exportDocs, setExportDocs] = useState<LessonDetail[]>([])
   const [exportProgress, setExportProgress] = useState<{ done: number; total: number } | null>(null)
@@ -326,8 +343,36 @@ export default function Lessons({ certs }: { certs: Certs }) {
           </select>
         </label>
 
-        <button type="button" className="ghost" onClick={refresh} title="Reload the curriculum from the server">
-          Refresh
+        <label className="check toolbar-check">
+          <input
+            type="checkbox"
+            checked={notDoneOnly}
+            onChange={(e) => setNotDoneOnly(e.target.checked)}
+          />
+          <span>Not done only</span>
+        </label>
+
+        {/* Icon only: the row already carries three labelled selects, and a fourth label for
+            something you press once is noise. The name lives in the tooltip and the aria-label,
+            which is also where the count went - it changes with every filter and is already on
+            screen as "1-5 of 103" under the list. */}
+        <button
+          type="button"
+          className="ghost icon-button"
+          disabled={exportProgress !== null || visible.length === 0}
+          onClick={() => void exportPdf()}
+          title={
+            exportProgress
+              ? `Preparing ${exportProgress.done} of ${exportProgress.total}…`
+              : `Download these ${visible.length} lessons as a PDF`
+          }
+          aria-label={
+            exportProgress
+              ? `Preparing the PDF, ${exportProgress.done} of ${exportProgress.total} lessons`
+              : `Download these ${visible.length} lessons as a PDF`
+          }
+        >
+          {exportProgress ? <Spinner label="" /> : <PdfDownloadIcon />}
         </button>
       </div>
 
@@ -352,31 +397,6 @@ export default function Lessons({ certs }: { certs: Certs }) {
 
       {data && data.totalTopics > 0 && (
         <>
-          <div className="lesson-filters">
-            <div className="filter-end">
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={notDoneOnly}
-                  onChange={(e) => setNotDoneOnly(e.target.checked)}
-                />
-                <span>Not done only ({counts.remaining})</span>
-              </label>
-
-              <button
-                type="button"
-                className="ghost"
-                disabled={exportProgress !== null || visible.length === 0}
-                onClick={() => void exportPdf()}
-                title="Export every lesson matching these filters as one PDF"
-              >
-                {exportProgress
-                  ? `Preparing ${exportProgress.done}/${exportProgress.total}…`
-                  : `Export PDF (${visible.length})`}
-              </button>
-            </div>
-          </div>
-
           {visible.length === 0 ? (
             <EmptyState
               title="Nothing here"

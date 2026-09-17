@@ -1615,14 +1615,23 @@ button.review:hover:not(:disabled) {
   color: var(--pass);
 }
 
-/* What is left of the filter row once the kind picker became a dropdown: the "not done only"
-   checkbox and the export button, sitting at the end of the row above the list. */
-.lesson-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem;
+/* The checkbox sits in the toolbar beside the selects, so it has to line up with their boxes
+   rather than with their labels - the fields are label-above-control, and baseline alignment
+   would leave it floating level with the word "Category". */
+.toolbar-check {
+  align-self: flex-end;
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+/* A button that is only an icon still has to be as easy to hit as one with a word in it. */
+.icon-button {
+  align-self: flex-end;
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0;
 }
 
 .check {
@@ -2256,7 +2265,6 @@ button.review:hover:not(:disabled) {
   .footer,
   .skip-link,
   .toolbar,
-  .lesson-filters,
   .pager,
   .lesson-actions,
   .lesson-practice,
@@ -2358,10 +2366,3 @@ button.review:hover:not(:disabled) {
   }
 }
 
-/* Keeps "not done only" and the export button together at the end of the filter row. */
-.filter-end {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
