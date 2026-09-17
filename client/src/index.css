@@ -1615,57 +1615,8 @@ button.review:hover:not(:disabled) {
   color: var(--pass);
 }
 
-.lesson-progress {
-  display: grid;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.lesson-progress-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-/* Filter tabs. A row of buttons rather than a select: with four options the choice should be
-   visible, and the counts people care about are the first two. */
-.segmented {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  width: fit-content;
-  max-width: 100%;
-}
-
-.segmented button {
-  border: 0;
-  background: transparent;
-  color: var(--text-2);
-  font-weight: 600;
-  font-size: 0.85rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-}
-
-.segmented button:hover {
-  color: var(--text);
-}
-
-.segmented button.active {
-  background: var(--surface);
-  color: var(--accent);
-  box-shadow: var(--shadow-sm);
-}
-
-/* The two lesson filters sit on one row and wrap to two on a narrow screen, so the checkbox is
-   never pushed off the side. */
+/* What is left of the filter row once the kind picker became a dropdown: the "not done only"
+   checkbox and the export button, sitting at the end of the row above the list. */
 .lesson-filters {
   display: flex;
   flex-wrap: wrap;
@@ -2307,7 +2258,6 @@ button.review:hover:not(:disabled) {
   .toolbar,
   .lesson-filters,
   .pager,
-  .lesson-progress,
   .lesson-actions,
   .lesson-practice,
   .lesson-tutor,

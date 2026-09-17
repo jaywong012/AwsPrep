@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import type { LessonDetail, LessonSummary, LessonsResponse, MasteryStatus } from '../api/types'
 import type { useCertifications } from '../hooks/useCertifications'
-import { Banner, CertPicker, EmptyState, Meter, ServiceIcon, Skeleton } from '../components/Ui'
+import { Banner, CertPicker, EmptyState, ServiceIcon, Skeleton } from '../components/Ui'
 import { Link } from '../router'
 import { getCachedLessons, invalidateLessonCache, setCachedLessons } from './lessonCache'
 import { LessonPrintDocument } from '../components/LessonPrint'
@@ -289,68 +289,46 @@ export default function Lessons({ certs }: { certs: Certs }) {
     return `${selectedCode} · ${parts.join(' · ')}`
   }, [selectedCode, kind, category, notDoneOnly])
 
-  const progressPercent =
-    data && data.totalTopics > 0 ? (100 * data.completedTopics) / data.totalTopics : 0
 
   return (
     <div className="stack">
       <div className="page-head">
         <h1>Lessons</h1>
-        <p>
-          What to learn to answer {selectedCode} questions — every service, what it is for, what it
-          costs, and what it is confused with.
-        </p>
       </div>
 
-      <div className="card">
-        <div className="toolbar">
-          <CertPicker certifications={certifications} selectedCode={selectedCode} onSelect={select} />
+      <div className="toolbar">
+        <CertPicker certifications={certifications} selectedCode={selectedCode} onSelect={select} />
 
-          <label className="field">
-            <span>Teaches</span>
-            <select
-              value={kind}
-              onChange={(e) => setKind(e.target.value as Kind)}
-              title={KINDS.find((k) => k.id === kind)?.hint}
-            >
-              {KINDS.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.label} ({counts.perKind.get(k.id) ?? 0})
-                </option>
-              ))}
-            </select>
-          </label>
+        <label className="field">
+          <span>Teaches</span>
+          <select
+            value={kind}
+            onChange={(e) => setKind(e.target.value as Kind)}
+            title={KINDS.find((k) => k.id === kind)?.hint}
+          >
+            {KINDS.map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.label} ({counts.perKind.get(k.id) ?? 0})
+              </option>
+            ))}
+          </select>
+        </label>
 
-          <label className="field">
-            <span>Category</span>
-            <select value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">All categories ({counts.allCategories})</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c} ({counts.perCategory.get(c) ?? 0})
-                </option>
-              ))}
-            </select>
-          </label>
+        <label className="field">
+          <span>Category</span>
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="">All categories ({counts.allCategories})</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c} ({counts.perCategory.get(c) ?? 0})
+              </option>
+            ))}
+          </select>
+        </label>
 
-          <button type="button" className="ghost" onClick={refresh} title="Reload the curriculum from the server">
-            Refresh
-          </button>
-        </div>
-
-        {data && data.totalTopics > 0 && (
-          <div className="lesson-progress">
-            <div className="lesson-progress-head">
-              <strong>
-                {data.completedTopics} of {data.totalTopics} topics done
-              </strong>
-              <span className="muted small">
-                Ordered by what you get wrong in exams, not alphabetically.
-              </span>
-            </div>
-            <Meter value={progressPercent} tone="neutral" />
-          </div>
-        )}
+        <button type="button" className="ghost" onClick={refresh} title="Reload the curriculum from the server">
+          Refresh
+        </button>
       </div>
 
       {error && <Banner kind="error">{error}</Banner>}
