@@ -4,6 +4,9 @@ import type { LessonDetail, Question } from '../api/types'
 import { Banner, ServiceIcon, Skeleton, Spinner } from '../components/Ui'
 import { LessonTutor } from '../components/LessonTutor'
 import { Link, useRouter } from '../router'
+import { invalidateLessonCache } from './lessonCache'
+import { LessonPrintDocument } from '../components/LessonPrint'
+import { printRenderedDocument } from '../components/printDocument'
 
 /**
  * One lesson.
@@ -79,6 +82,9 @@ export default function Lesson({ code, slug }: { code?: string; slug?: string })
             ? await api.lessons.rewriteNotes(code, slug)
             : await api.lessons.writeNotes(code, slug),
         )
+
+        // The list marks a lesson "Notes on first open" until they exist, and they now do.
+        invalidateLessonCache(code)
       } catch (e) {
         // Rewriting replaces notes every learner shares, so the API gates it behind the operator
         // key in production, exactly as deleting a question is gated.
@@ -107,6 +113,10 @@ export default function Lesson({ code, slug }: { code?: string; slug?: string })
     try {
       const result = await api.lessons.setProgress(code, slug, !lesson.completed)
       setLesson({ ...lesson, completed: result.completed })
+
+      // The lessons list is cached for the tab, and this is the one thing on it that just
+      // changed - without dropping it, going back shows this lesson as still not done.
+      invalidateLessonCache(code)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save your progress')
     } finally {
@@ -335,6 +345,10 @@ export default function Lesson({ code, slug }: { code?: string; slug?: string })
               : 'Mark this lesson done'}
         </button>
 
+        <button type="button" className="ghost" onClick={() => void printRenderedDocument()}>
+          Export PDF
+        </button>
+
         {lesson.related.length > 0 && (
           <nav className="lesson-related" aria-label="Related lessons">
             <span className="muted small">Related:</span>
@@ -352,6 +366,14 @@ export default function Lesson({ code, slug }: { code?: string; slug?: string })
         slug={lesson.slug}
         title={lesson.title}
         available={lesson.aiConfigured}
+      />
+
+      {/* Hidden until the browser prints. Rendered from the lesson already on screen, so the
+          export is whatever you are looking at - no second fetch, nothing to go stale. */}
+      <LessonPrintDocument
+        lessons={[lesson]}
+        title={lesson.title}
+        subtitle={`${code} · ${lesson.category}`}
       />
     </div>
   )

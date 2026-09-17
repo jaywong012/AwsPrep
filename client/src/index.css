@@ -539,6 +539,31 @@ input[type='password'] {
   font-weight: 450;
 }
 
+/* The platform's own chevron sits hard against the right border with none of the padding the
+   text gets, and it is drawn by the OS so it ignores the theme. This replaces it with one that
+   keeps the same 0.75rem gap from the edge as the label has on the left, and that is tinted
+   per theme. Drawn as a background image rather than a pseudo-element because a select cannot
+   have one, and wrapping every select in the app to get a wrapper instead is a lot of markup
+   for an arrow. */
+select {
+  appearance: none;
+  padding-right: 2.25rem;
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 11px 7px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' fill='none' stroke='%236b7889' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+:root[data-theme='dark'] select {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' fill='none' stroke='%238d99a9' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) select {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' fill='none' stroke='%238d99a9' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
+
 select:hover,
 input:hover {
   border-color: var(--muted);
@@ -1625,6 +1650,21 @@ button.review:hover:not(:disabled) {
   box-shadow: var(--shadow-sm);
 }
 
+/* The count beside a filter choice. Dimmer and lighter than the label so the words still read
+   first and the number is there when you look for it. */
+.segmented button .count {
+  display: inline-block;
+  margin-left: 0.3rem;
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.segmented button.active .count {
+  color: var(--accent);
+}
+
 /* The two lesson filters sit on one row and wrap to two on a narrow screen, so the checkbox is
    never pushed off the side. */
 .lesson-filters {
@@ -1655,6 +1695,42 @@ button.review:hover:not(:disabled) {
 
 .check:hover {
   color: var(--text);
+}
+
+/* Pagination under the lesson list. The page buttons reuse the exam runner's jump-dot shape so
+   "pick a page" looks the same everywhere in the app. */
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-top: 0.25rem;
+}
+
+.pager-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.page-dot {
+  min-height: 30px;
+  min-width: 30px;
+  padding: 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 8px;
+  color: var(--text-2);
+  border-color: var(--border);
+  font-variant-numeric: tabular-nums;
+}
+
+.page-dot.current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
 .lesson-list {
@@ -2161,4 +2237,153 @@ button.review:hover:not(:disabled) {
     text-align: left;
     padding: 0 1rem 0.9rem;
   }
+}
+
+/* ============================================================
+   Print / PDF export
+   ============================================================ */
+
+/* The export document is built in the live page and hidden until the browser is printing. A
+   popup window would be cleaner to reason about and is the first thing an ad blocker eats. */
+.print-doc {
+  display: none;
+}
+
+@media print {
+  /* Paper is white whatever the learner reads the app in, and a dark theme printed as-is either
+     burns a cartridge or drops to unreadable grey. */
+  :root,
+  :root[data-theme='dark'],
+  :root[data-theme='light'] {
+    --text: #000;
+    --text-2: #222;
+    --muted: #444;
+    --border: #999;
+    --surface: #fff;
+    --surface-2: #fff;
+    --bg: #fff;
+    color-scheme: light;
+  }
+
+  body {
+    background: #fff;
+    background-image: none;
+    color: #000;
+    font-size: 11pt;
+  }
+
+  /* Everything that is the app rather than the content. */
+  .topbar,
+  .footer,
+  .skip-link,
+  .toolbar,
+  .lesson-filters,
+  .pager,
+  .lesson-progress,
+  .lesson-actions,
+  .lesson-practice,
+  .lesson-tutor,
+  .lesson-foot,
+  .banner,
+  .exam-panel,
+  button {
+    display: none !important;
+  }
+
+  .main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .print-doc {
+    display: block;
+  }
+
+  .print-cover {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #000;
+  }
+
+  .print-cover h1 {
+    font-size: 20pt;
+  }
+
+  .print-subtitle {
+    font-size: 12pt;
+    font-weight: 600;
+  }
+
+  .print-meta,
+  .print-disclaimer {
+    font-size: 9pt;
+    color: #444;
+    margin-top: 0.35rem;
+  }
+
+  /* One lesson per page keeps a revision printout navigable, and stops a heading stranding
+     itself at the foot of a page. */
+  .print-lesson {
+    break-before: page;
+    break-inside: auto;
+  }
+
+  .print-lesson:first-of-type {
+    break-before: avoid;
+  }
+
+  .print-lesson h2 {
+    font-size: 15pt;
+    margin-bottom: 0.2rem;
+    break-after: avoid;
+  }
+
+  .print-lesson h3 {
+    font-size: 11pt;
+    margin: 0.8rem 0 0.15rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #333;
+    break-after: avoid;
+  }
+
+  .print-lesson p,
+  .print-lesson li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .print-lesson ul {
+    margin: 0.2rem 0;
+    padding-left: 1.1rem;
+  }
+
+  .print-tags {
+    font-size: 9pt;
+    color: #444;
+    margin-bottom: 0.5rem;
+  }
+
+  .print-note {
+    font-style: italic;
+    color: #444;
+  }
+
+  /* The URL is printed in full because a PDF read on paper cannot be clicked. */
+  .print-source {
+    margin-top: 0.8rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid #bbb;
+    font-size: 8.5pt;
+    color: #333;
+    word-break: break-all;
+  }
+}
+
+/* Keeps "not done only" and the export button together at the end of the filter row. */
+.filter-end {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
