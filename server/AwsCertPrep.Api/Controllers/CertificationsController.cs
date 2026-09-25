@@ -1,6 +1,7 @@
 using AwsCertPrep.Api.Application.Abstractions;
 using AwsCertPrep.Api.Application.Certifications;
 using AwsCertPrep.Api.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AwsCertPrep.Api.Controllers;
@@ -11,6 +12,8 @@ namespace AwsCertPrep.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/certifications")]
+// The seeded blueprint catalogue: shared, read-only, and needed before anyone can sign in.
+[AllowAnonymous]
 public class CertificationsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

@@ -3,6 +3,7 @@ using AwsCertPrep.Api.Application.Abstractions;
 using AwsCertPrep.Api.Application.Lessons;
 using AwsCertPrep.Api.Dtos;
 using AwsCertPrep.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -18,10 +19,14 @@ namespace AwsCertPrep.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/lessons")]
+// Every action, including the two that look like plain reads: opening a lesson records a view
+// against the learner (LessonQueries.RecordViewAsync), and listing them reads per-user mastery.
+[Authorize]
 [Produces("application/json")]
 public partial class LessonsController(IMediator mediator) : ControllerBase
 {
-    private string UserKey => HttpContext.GetUserKey();
+    /// <summary>The signed-in account. [Authorize] above guarantees there is one.</summary>
+    private string UserKey => User.GetUserId();
 
     /// <summary>
     /// The curriculum for a certification, ordered by what this learner should study next.

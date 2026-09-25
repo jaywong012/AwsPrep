@@ -3,6 +3,7 @@ using AwsCertPrep.Api.Application.Exams;
 using AwsCertPrep.Api.Application.Insights;
 using AwsCertPrep.Api.Dtos;
 using AwsCertPrep.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AwsCertPrep.Api.Controllers;
@@ -13,10 +14,12 @@ namespace AwsCertPrep.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/exams")]
+[Authorize]
 [Produces("application/json")]
 public class ExamsController(IMediator mediator) : ControllerBase
 {
-    private string UserKey => HttpContext.GetUserKey();
+    /// <summary>The signed-in account. [Authorize] above guarantees there is one.</summary>
+    private string UserKey => User.GetUserId();
 
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]

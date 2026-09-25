@@ -3,6 +3,7 @@ using AwsCertPrep.Api.Application.Questions;
 using AwsCertPrep.Api.Domain;
 using AwsCertPrep.Api.Dtos;
 using AwsCertPrep.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -17,6 +18,10 @@ namespace AwsCertPrep.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/questions")]
+// No class-level [AllowAnonymous] here, deliberately. It cannot be narrowed by an [Authorize] on
+// a single action: the authorization middleware skips an endpoint whose metadata carries
+// IAllowAnonymous anywhere, so a class-level one silently opens every action on the controller.
+// The reads below are opened one at a time instead; everything else inherits the fallback policy.
 [Produces("application/json")]
 public class QuestionsController(IMediator mediator) : ControllerBase
 {
@@ -24,6 +29,10 @@ public class QuestionsController(IMediator mediator) : ControllerBase
     /// Generates practice questions and stores them. Rate limited: each call is a paid or
     /// quota-limited call to an LLM provider.
     /// </summary>
+    // Spends the LLM provider's quota, so it needs a real identity to charge the per-learner
+    // rate limit against - an anonymous caller would only ever count against the shared address
+    // bucket.
+    [Authorize]
     [HttpPost("generate")]
     [EnableRateLimiting(RateLimitPolicies.Generate)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -39,6 +48,8 @@ public class QuestionsController(IMediator mediator) : ControllerBase
                 request.TopicHint),
             ct));
 
+    // Shared content, not personal data: the bank is browsable without an account.
+    [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -72,6 +83,7 @@ public class QuestionsController(IMediator mediator) : ControllerBase
     }
 
     /// <summary>Deletes one unused question. Destructive and shared, so it needs the admin key.</summary>
+    [Authorize]
     [HttpDelete("{id:guid}")]
     [ServiceFilter(typeof(AdminOnlyFilter))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -83,6 +95,7 @@ public class QuestionsController(IMediator mediator) : ControllerBase
     /// Dry run: reports stored questions that break the official item format or fall outside the
     /// certification's scope. Nothing is modified.
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("audit")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<AuditReportDto>> Audit(
@@ -96,6 +109,7 @@ public class QuestionsController(IMediator mediator) : ControllerBase
     /// GET is the dry run and writes nothing; POST applies it. Admin-gated because it rewrites a
     /// column across the shared bank.
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("difficulty")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<DifficultyRecalculationDto>> PreviewDifficulty(
@@ -103,6 +117,7 @@ public class QuestionsController(IMediator mediator) : ControllerBase
         Ok(await mediator.SendAsync(
             new RecalculateDifficultyCommand(certificationCode, Apply: false), ct));
 
+    [Authorize]
     [HttpPost("difficulty")]
     [ServiceFilter(typeof(AdminOnlyFilter))]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -116,6 +131,7 @@ public class QuestionsController(IMediator mediator) : ControllerBase
     /// Applies the audit: deletes flagged questions nobody has answered and retires the ones
     /// referenced by exam history, so past results stay explainable.
     /// </summary>
+    [Authorize]
     [HttpPost("audit/clean")]
     [ServiceFilter(typeof(AdminOnlyFilter))]
     [ProducesResponseType(StatusCodes.Status200OK)]

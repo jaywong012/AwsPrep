@@ -1,5 +1,5 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios'
-import { getAdminKey, getUserKey } from './identity'
+import { getAdminKey, getToken } from './identity'
 
 /**
  * Where the API lives. A production build usually serves the SPA from the API's own origin, or
@@ -34,6 +34,24 @@ interface ProblemDetails {
   title?: string
   detail?: string
   message?: string
+  /**
+   * ASP.NET's ValidationProblemDetails: a dictionary of field name to messages, and NO `detail`.
+   * Model-binding failures arrive in this shape alone, so without reading it a rejected form
+   * shows "Request failed with status 400" instead of what was wrong with it.
+   */
+  errors?: Record<string, string[]>
+}
+
+/**
+ * Called when the API says the session is no longer good.
+ *
+ * Injected rather than imported so this module stays free of React and the router. The auth
+ * provider registers it on mount and clears it on unmount.
+ */
+let onUnauthorized: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  onUnauthorized = handler
 }
 
 export const http: AxiosInstance = axios.create({
@@ -44,7 +62,10 @@ export const http: AxiosInstance = axios.create({
 // Identity is attached per request, not at creation: the operator key can be set from the Bank
 // page mid-session, and a client built once at import time would keep sending the old value.
 http.interceptors.request.use((config) => {
-  config.headers.set('X-User-Key', getUserKey())
+  // Conditional, unlike the learner key it replaced: health checks and the sign-in call itself
+  // should go out clean rather than carrying a token that does not exist yet.
+  const token = getToken()
+  if (token) config.headers.set('Authorization', `Bearer ${token}`)
 
   const adminKey = getAdminKey()
   if (adminKey) config.headers.set('X-Admin-Key', adminKey)
@@ -61,6 +82,21 @@ http.interceptors.response.use(
     const status = error.response?.status ?? 0
     const problem = error.response?.data as ProblemDetails | undefined
 
+    // An expired or rejected token ends the session once, centrally, rather than in each of the
+    // dozen catch blocks that would otherwise each have to know about it.
+    //
+    // Three conditions, all load-bearing:
+    //  - not an /api/auth call: a 401 from sign-in means "wrong password" and belongs to the
+    //    form. Without this the login page would clear a token it never had and swallow its own
+    //    error message.
+    //  - a token exists: a 401 without one means we already know we are signed out.
+    //  - the handler tolerates being called several times, because a page that fires four
+    //    requests at once gets four 401s.
+    const url = error.config?.url ?? ''
+    if (status === 401 && !url.startsWith('/api/auth/') && getToken()) {
+      onUnauthorized?.()
+    }
+
     // A request that never reached the server has no status: say so plainly rather than
     // reporting "status 0", which tells the learner nothing.
     if (!error.response) {
@@ -72,13 +108,28 @@ http.interceptors.response.use(
     }
 
     const detail =
-      problem?.detail ?? problem?.message ?? error.message ?? `Request failed with status ${status}`
+      problem?.detail
+      ?? problem?.message
+      ?? flattenValidationErrors(problem)
+      ?? error.message
+      ?? `Request failed with status ${status}`
 
     const title = problem?.title ?? (status === 429 ? 'Too many requests' : undefined)
 
     throw new ApiError(detail, status, title)
   },
 )
+
+/**
+ * Turns a ValidationProblemDetails dictionary into one sentence, or null when there is none.
+ *
+ * Joined rather than shown per field: a rejected password usually breaks several rules at once,
+ * and fixing them one refusal at a time is miserable.
+ */
+function flattenValidationErrors(problem: ProblemDetails | undefined): string | null {
+  const messages = Object.values(problem?.errors ?? {}).flat()
+  return messages.length > 0 ? messages.join(' ') : null
+}
 
 /** Unwraps the body, so endpoint modules read as `get<Thing>(path)` rather than juggling responses. */
 export async function get<T>(url: string, params?: Record<string, unknown>): Promise<T> {

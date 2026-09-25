@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using AwsCertPrep.Api.Services;
 using Microsoft.AspNetCore.Diagnostics;
@@ -18,6 +19,17 @@ public static class ExceptionHandling
             var (status, title) = ex switch
             {
                 KeyNotFoundException => (StatusCodes.Status404NotFound, "Not found"),
+
+                // The mediator's ValidationBehavior throws this for a malformed request record.
+                // Without a case here it fell through to 500, which turned "you left a field
+                // out" into "the server is broken" and scrubbed the message that said which.
+                ValidationException => (StatusCodes.Status400BadRequest, "Invalid request"),
+
+                // An action ran without an authenticated principal. Refused sign-ins do NOT come
+                // through here - they are return values, so an ordinary wrong password never
+                // reaches the exception path at all.
+                UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Authentication required"),
+
                 InvalidOperationException => (StatusCodes.Status400BadRequest, "Invalid request"),
                 AiConfigurationException => (StatusCodes.Status503ServiceUnavailable, "AI provider not configured"),
                 AiProviderException => (StatusCodes.Status502BadGateway, "AI provider error"),

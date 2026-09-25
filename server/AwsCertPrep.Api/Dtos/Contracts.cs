@@ -325,3 +325,23 @@ public class LessonProgressRequest
 {
     public bool Completed { get; set; }
 }
+
+// ---------- auth ----------
+
+/// <summary>
+/// What the SPA gets back from registering or signing in. <paramref name="ExpiresAtUtc"/> lets
+/// the client renew before a request fails rather than discovering expiry as a 401 mid-exam.
+/// </summary>
+public record AuthResultDto(string Token, DateTime ExpiresAtUtc, string UserId, string Email);
+
+/// <summary>Who the caller is, for the SPA to display and to re-key its per-user caches on.</summary>
+public record CurrentUserDto(string UserId, string Email);
+
+public class CredentialsRequest
+{
+    [Required, EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    public string Password { get; set; } = string.Empty;
+}

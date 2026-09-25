@@ -38,11 +38,21 @@ const KINDS: { id: Kind; label: string; hint: string }[] = [
   { id: 'Commercial', label: 'Buying & support', hint: 'How you pay for AWS and get help' },
 ]
 
-const PAGE_SIZE = 5
+/**
+ * How many lessons a page holds.
+ *
+ * Five by default because the rows are tall - each carries a description, a category and a
+ * mastery badge - and five of them fill a laptop screen without scrolling, so "what do I study
+ * next" is answered without moving. Someone hunting for one topic they half remember wants the
+ * opposite, so the list goes up to a hundred and remembers which size you chose.
+ */
+const PAGE_SIZES = [5, 10, 20, 50, 100]
+
+const DEFAULT_PAGE_SIZE = 5
 
 /**
  * Where the learner was in the list: which kind, which category, whether they were hiding what
- * they had finished, and which page.
+ * they had finished, how many rows a page holds, and which page.
  *
  * Kept per certification, because the categories of one are not the categories of another -
  * carrying "Encryption" from CLF-C02 over to AIF-C01 would filter the list down to nothing and
@@ -53,6 +63,7 @@ interface ViewState {
   kind: Kind
   category: string
   notDoneOnly: boolean
+  pageSize: number
   page: number
 }
 
@@ -78,7 +89,13 @@ function pageNumbers(current: number, total: number): (number | null)[] {
 
 const VIEW_KEY = 'awscert.lessons.view'
 
-const DEFAULT_VIEW: ViewState = { kind: 'all', category: '', notDoneOnly: false, page: 1 }
+const DEFAULT_VIEW: ViewState = {
+  kind: 'all',
+  category: '',
+  notDoneOnly: false,
+  pageSize: DEFAULT_PAGE_SIZE,
+  page: 1,
+}
 
 function readAllViews(): Record<string, Partial<ViewState>> {
   try {
@@ -96,6 +113,11 @@ function readViewState(code: string | undefined): ViewState {
     kind: saved.kind ?? DEFAULT_VIEW.kind,
     category: saved.category ?? DEFAULT_VIEW.category,
     notDoneOnly: saved.notDoneOnly ?? DEFAULT_VIEW.notDoneOnly,
+    // Anything but one of the offered sizes is stale or hand-edited storage: a saved 0 would
+    // divide the list into an infinity of pages, and a saved 5000 would render the lot.
+    pageSize: PAGE_SIZES.includes(saved.pageSize as number)
+      ? (saved.pageSize as number)
+      : DEFAULT_VIEW.pageSize,
     page: saved.page ?? DEFAULT_VIEW.page,
   }
 }
@@ -139,7 +161,7 @@ export default function Lessons({ certs }: { certs: Certs }) {
   const [error, setError] = useState<string | null>(null)
 
   const [view, setView] = useState<ViewState>(() => readViewState(selectedCode))
-  const { kind, category, notDoneOnly } = view
+  const { kind, category, notDoneOnly, pageSize } = view
 
   const setKind = useCallback((next: Kind) => setView((v) => ({ ...v, kind: next, page: 1 })), [])
   const setCategory = useCallback(
@@ -151,6 +173,17 @@ export default function Lessons({ certs }: { certs: Certs }) {
     [],
   )
   const setPage = useCallback((next: number) => setView((v) => ({ ...v, page: next })), [])
+
+  /**
+   * Resizing the page keeps the row you were looking at on screen: the first lesson of the old
+   * page stays on the new one. Jumping back to page 1 would lose your place in a 103-lesson list
+   * every time you asked to see more of it at once.
+   */
+  const setPageSize = useCallback(
+    (next: number, firstIndex: number) =>
+      setView((v) => ({ ...v, pageSize: next, page: Math.floor(firstIndex / next) + 1 })),
+    [],
+  )
 
   const load = useCallback(async () => {
     if (!selectedCode) return
@@ -234,15 +267,15 @@ export default function Lessons({ certs }: { certs: Certs }) {
     [data],
   )
 
-  const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE))
+  const pageCount = Math.max(1, Math.ceil(visible.length / pageSize))
 
   // A filter that shrinks the list can leave you on a page that no longer exists; land on the
   // last real one rather than on "no lessons here".
   const currentPage = Math.min(view.page, pageCount)
 
   const pageItems = useMemo(
-    () => visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [visible, currentPage],
+    () => visible.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [visible, currentPage, pageSize],
   )
 
   // Switching certification swaps in whatever that one was left on, rather than carrying over a
@@ -415,8 +448,26 @@ export default function Lessons({ certs }: { certs: Certs }) {
               </ul>
 
               <nav className="pager" aria-label="Lesson pages">
+                {/* Sits in the pager rather than up in the toolbar: it changes the "1–5 of 103"
+                    beside it, and it is a property of the list you are reading, not one of the
+                    filters that decide which lessons are in it. */}
+                <label className="pager-size">
+                  <span>Per page</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value), (currentPage - 1) * pageSize)}
+                    aria-label="Lessons per page"
+                  >
+                    {PAGE_SIZES.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
                 <span className="muted small">
-                  {(currentPage - 1) * PAGE_SIZE + 1}–{(currentPage - 1) * PAGE_SIZE + pageItems.length} of{' '}
+                  {(currentPage - 1) * pageSize + 1}–{(currentPage - 1) * pageSize + pageItems.length} of{' '}
                   {visible.length}
                 </span>
 

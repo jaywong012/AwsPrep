@@ -149,7 +149,13 @@ public class ExamSession
     public int CertificationId { get; set; }
     public Certification? Certification { get; set; }
 
-    public string UserKey { get; set; } = "local";  // placeholder until auth is added
+    /// <summary>
+    /// The owning account's id, from the authenticated principal. No default: every query scopes
+    /// on this by hand, so a row written with a blank key belongs to nobody and no learner will
+    /// ever see it again. It was once a self-asserted browser key, which is why the column is a
+    /// string rather than a foreign key.
+    /// </summary>
+    public string UserKey { get; set; } = string.Empty;
     public ExamMode Mode { get; set; }
     public int DurationMinutes { get; set; }
 

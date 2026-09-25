@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using AwsCertPrep.Api.Data;
@@ -10,9 +11,14 @@ using AwsCertPrep.Api.Application.Options;
 using AwsCertPrep.Api.Infrastructure.Messaging;
 using AwsCertPrep.Api.Infrastructure.Persistence;
 using AwsCertPrep.Api.Services;
+using AwsCertPrep.Api.Domain;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -93,6 +99,84 @@ switch (aiProvider.ToLowerInvariant())
 // Real exam-style items, embedded at build time: they seed the bank and calibrate the prompt.
 builder.Services.AddSingleton<ReferenceBank>();
 
+// ---------- accounts and access tokens ----------
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+
+var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+
+// Fails fast rather than warning, unlike Admin:ApiKey. An unset admin key disables the endpoints
+// it guards, which is safe; there is no safe reading of an unset signing key.
+if (jwtOptions.Validate(builder.Environment.IsDevelopment()) is { } jwtProblem)
+{
+    throw new InvalidOperationException(jwtProblem);
+}
+
+// Development with no configured key gets a throwaway one, so `dotnet run` works on a fresh
+// clone the way the rest of this project does. Tokens then die with the process, which is why it
+// says so out loud.
+string? developmentSigningKey = null;
+if (string.IsNullOrWhiteSpace(jwtOptions.Key))
+{
+    developmentSigningKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
+    jwtOptions.Key = developmentSigningKey;
+    builder.Services.PostConfigure<JwtOptions>(o => o.Key = developmentSigningKey);
+}
+
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<JwtTokenService>();
+
+builder.Services.AddIdentityCore<AppUser>(o =>
+{
+    // Ten rather than Identity's six: registration is open, and a study app's password is the
+    // only thing between a stranger and someone's answer history.
+    o.Password.RequiredLength = 10;
+    o.Password.RequireDigit = true;
+    o.Password.RequireNonAlphanumeric = false;
+
+    o.User.RequireUniqueEmail = true;
+
+    // Nothing here can send mail, so requiring confirmation would lock out every account ever
+    // created. Called out in the README rather than left to be discovered.
+    o.SignIn.RequireConfirmedEmail = false;
+
+    o.Lockout.MaxFailedAccessAttempts = 5;
+    o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+})
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.TokenValidationParameters = JwtTokenService.ValidationParameters(jwtOptions);
+
+        // Off, so claims arrive under the names they were issued with. The default rewrites
+        // "sub" and "email" into long WS-Federation URIs on the way in, which means the claim a
+        // token visibly contains is not the claim the code can find.
+        o.MapInboundClaims = false;
+
+        // JwtBearer answers a refused request with a bare status and a WWW-Authenticate header.
+        // Every other failure in this API is problem+json with a trace id, and the SPA reads
+        // `detail`, so these are written to match rather than left as the one exception.
+        o.Events = new JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+                return WriteAuthProblem(context.HttpContext, StatusCodes.Status401Unauthorized,
+                    "Authentication required", "Sign in to use this endpoint.");
+            },
+            OnForbidden = context =>
+                WriteAuthProblem(context.HttpContext, StatusCodes.Status403Forbidden,
+                    "Not allowed", "This account cannot use this endpoint."),
+        };
+    });
+
+// Fail closed: anything added later is authenticated unless it says otherwise in so many words.
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+
 builder.Services.Configure<AdminOptions>(builder.Configuration.GetSection(AdminOptions.SectionName));
 builder.Services.AddScoped<AdminOnlyFilter>();
 
@@ -139,7 +223,9 @@ var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get
 
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
     .WithOrigins(allowedOrigins)
-    .WithHeaders("Content-Type", UserKeyAccessor.HeaderName, AdminOnlyFilter.HeaderName)
+    // Without "Authorization" the browser's preflight omits it and every signed-in call fails
+    // looking like a CORS fault rather than a 401.
+    .WithHeaders("Content-Type", "Authorization", AdminOnlyFilter.HeaderName)
     // PUT is used by the idempotent writes: setting lesson progress, and rewriting lesson notes.
     .WithMethods("GET", "POST", "PUT", "DELETE")
     .SetPreflightMaxAge(TimeSpan.FromHours(1))));
@@ -166,12 +252,22 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+
+// Authentication MUST run before the rate limiter: the limiter partitions on the authenticated
+// subject, and with no principal yet every signed-in request would silently share one per-address
+// bucket. That failure has no error and no log - just unexplained 429s behind a shared address.
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseRateLimiter();
 app.MapControllers();
 
 // Liveness: answers without touching the database, so a database blip never recycles the pod.
+// AllowAnonymous is required, not decorative: the fallback policy would otherwise 401 the
+// liveness probe and an orchestrator would recycle a perfectly healthy instance.
 app.MapGet("/api/health", (IQuestionGenerator generator) =>
         Results.Ok(new { status = "ok", aiProvider = generator.Provider }))
+    .AllowAnonymous()
     .DisableRateLimiting();
 
 // Readiness: the database is reachable and the question bank has something to serve.
@@ -179,7 +275,7 @@ app.MapHealthChecks("/api/health/ready", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready"),
     ResponseWriter = WriteHealthResponse,
-}).DisableRateLimiting();
+}).AllowAnonymous().DisableRateLimiting();
 
 // ---------- startup database work ----------
 // Migrating on startup is convenient for one instance and wrong for several: two instances
@@ -224,9 +320,40 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+if (developmentSigningKey is not null)
+{
+    app.Logger.LogWarning(
+        "Jwt:Key is not configured, so a random signing key was generated for this process. "
+        + "Every access token becomes invalid when the API restarts. Set it in user-secrets to "
+        + "keep sessions across restarts.");
+}
+
 WarnAboutRiskyProductionConfiguration(app, aiProvider, allowedOrigins);
 
 app.Run();
+
+/// <summary>
+/// Writes an authentication failure in the same problem+json shape as every other error here,
+/// trace id included, so the SPA has one thing to read and a support report has one thing to
+/// quote.
+/// </summary>
+static Task WriteAuthProblem(HttpContext context, int status, string title, string detail)
+{
+    if (context.Response.HasStarted) return Task.CompletedTask;
+
+    context.Response.StatusCode = status;
+
+    var problem = new ProblemDetails
+    {
+        Status = status,
+        Title = title,
+        Detail = detail,
+        Instance = context.Request.Path,
+    };
+    problem.Extensions["traceId"] = System.Diagnostics.Activity.Current?.Id ?? context.TraceIdentifier;
+
+    return context.Response.WriteAsJsonAsync(problem, options: null, contentType: "application/problem+json");
+}
 
 static async Task WriteHealthResponse(HttpContext context, HealthReport report)
 {

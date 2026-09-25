@@ -214,18 +214,26 @@ export default function Bank({ certs }: { certs: Certs }) {
 
                 <p className="stem">{q.stem}</p>
 
+                {/* The options are part of the question, not part of the answer. Hiding them
+                    behind "Show answer" left a stem with nothing to choose between, so a
+                    generated item could not actually be read - which is the one thing this
+                    preview exists for. Revealing which one is right is what the toggle does. */}
+                <ul className="options">
+                  {q.options.map((o) => (
+                    <li
+                      key={o.label}
+                      className={expanded.has(q.id) && o.isCorrect ? 'correct' : undefined}
+                    >
+                      <span className="opt-label" aria-hidden="true">
+                        {o.label}
+                      </span>
+                      <span>{o.text}</span>
+                    </li>
+                  ))}
+                </ul>
+
                 {expanded.has(q.id) && (
                   <>
-                    <ul className="options">
-                      {q.options.map((o) => (
-                        <li key={o.label} className={o.isCorrect ? 'correct' : undefined}>
-                          <span className="opt-label" aria-hidden="true">
-                            {o.label}
-                          </span>
-                          <span>{o.text}</span>
-                        </li>
-                      ))}
-                    </ul>
                     {q.explanation && (
                       <p className="explanation">
                         <strong>Why: </strong>

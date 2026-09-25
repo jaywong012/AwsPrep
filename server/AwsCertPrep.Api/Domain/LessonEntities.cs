@@ -99,9 +99,9 @@ public class LessonContent
 }
 
 /// <summary>
-/// Per-learner progress through a topic, keyed by the same anonymous browser key the exam
-/// sessions use. Viewing is tracked separately from completing: opening a lesson should not
-/// silently mark it done.
+/// Per-learner progress through a topic, keyed by the account id the exam sessions use.
+/// Viewing is tracked separately from completing: opening a lesson should not silently mark it
+/// done.
 /// </summary>
 public class LessonProgress
 {
@@ -110,7 +110,8 @@ public class LessonProgress
     public int LessonTopicId { get; set; }
     public LessonTopic? LessonTopic { get; set; }
 
-    public string UserKey { get; set; } = "local";
+    /// <summary>The owning account's id. See <see cref="ExamSession.UserKey"/>.</summary>
+    public string UserKey { get; set; } = string.Empty;
 
     public DateTime? CompletedAt { get; set; }
     public DateTime LastViewedAt { get; set; } = DateTime.UtcNow;

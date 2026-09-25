@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
@@ -16,8 +17,9 @@ public class RateLimitOptions
     public int GeneratePerHour { get; set; } = 30;
 
     /// <summary>
-    /// Generation calls per client address per hour. The learner key is self-asserted, so this is
-    /// the limit that actually caps what one caller can spend of the provider's quota.
+    /// Generation calls per client address per hour. Registration is open, so a determined caller
+    /// can mint accounts to reset the per-learner bucket; this is the limit that survives that
+    /// and actually caps what one source can spend of the provider's quota.
     /// </summary>
     public int GeneratePerHourPerAddress { get; set; } = 60;
 
@@ -26,20 +28,31 @@ public class RateLimitOptions
 
     /// <summary>Catch-all per client address per minute, so one caller cannot saturate the API.</summary>
     public int GlobalPerMinute { get; set; } = 300;
+
+    /// <summary>
+    /// Sign-in and registration attempts per client address per fifteen minutes. This is the
+    /// per-source half of the brute-force defence; Identity's account lockout is the per-account
+    /// half. Neither covers the other's case - lockout does nothing against someone spraying one
+    /// password across many addresses, and an address limit does nothing against a botnet
+    /// grinding one account.
+    /// </summary>
+    public int AuthPerFifteenMinutes { get; set; } = 10;
 }
 
 /// <summary>
 /// Rate limits for the endpoints where a single caller can cost real money (LLM generation) or
 /// real CPU (ML.NET training), plus a global ceiling per client address.
 ///
-/// Partitioning is by learner key where one exists and by remote address otherwise: the learner
-/// key is self-asserted, so it shapes fair use between browsers rather than acting as a control
-/// a determined caller cannot sidestep - that is what the global per-address limit is for.
+/// Partitioning is by authenticated account where there is one and by remote address otherwise.
+/// Since the subject is now signed rather than self-asserted, the per-learner limit is a real
+/// control on a real identity - but registration is open, so the per-address ceilings remain the
+/// backstop against someone making new accounts to get a fresh bucket.
 /// </summary>
 public static class RateLimitPolicies
 {
     public const string Generate = "generate";
     public const string Insights = "insights";
+    public const string Auth = "auth";
 
     public static IServiceCollection AddAppRateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
@@ -81,9 +94,15 @@ public static class RateLimitPolicies
                 ? RateLimitPartition.GetNoLimiter(OperatorPartition)
                 : FixedWindow(PartitionKey(context), options.InsightsPerMinute, TimeSpan.FromMinutes(1)));
 
+            // Sign-in and registration. Always per address - the caller is unauthenticated by
+            // definition, and partitioning on the submitted email would hand an attacker a fresh
+            // bucket per guess. No operator bypass either: there is no legitimate bulk login.
+            limiter.AddPolicy(Auth, context =>
+                FixedWindow($"auth:{Address(context)}", options.AuthPerFifteenMinutes, TimeSpan.FromMinutes(15)));
+
             // Chained: every request counts against the per-address ceiling, and a generation
-            // request additionally counts against the per-address generation budget. Rotating the
-            // X-User-Key header sidesteps the named policy above but not these.
+            // request additionally counts against the per-address generation budget. Registering
+            // a second account sidesteps the named policy above but not these.
             limiter.GlobalLimiter = PartitionedRateLimiter.CreateChained(
                 PartitionedRateLimiter.Create<HttpContext, string>(context =>
                     context.IsVerifiedOperator()
@@ -130,9 +149,18 @@ public static class RateLimitPolicies
     private static string Address(HttpContext context) =>
         context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
+    /// <summary>
+    /// The bucket a request counts against: the signed-in account, or the client address when
+    /// there is no principal.
+    ///
+    /// The address fallback is deliberate rather than a throw. Every endpoint carrying a named
+    /// policy also carries [Authorize], so in practice this only ever returns a user partition -
+    /// but if the pipeline were ever reordered so authentication ran after the limiter, degrading
+    /// to a stricter shared bucket is a better failure than an exception on every request.
+    /// </summary>
     private static string PartitionKey(HttpContext context)
     {
-        var userKey = context.GetUserKey();
-        return userKey == UserKeyAccessor.Anonymous ? $"ip:{Address(context)}" : $"user:{userKey}";
+        var userId = context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        return string.IsNullOrEmpty(userId) ? $"ip:{Address(context)}" : $"user:{userId}";
     }
 }

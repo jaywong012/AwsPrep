@@ -1,5 +1,29 @@
 @host = http://localhost:5176
-@user = local
+
+# Sign in first, then every request below carries the token. In VS Code's REST Client and
+# Rider, {{login.response.body.token}} reads it straight off the named request above.
+@email = you@example.com
+@password = ChangeMe123
+@token = {{login.response.body.token}}
+@adminKey = local-operator-key
+
+### Create an account
+# @name register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "email": "{{email}}", "password": "{{password}}" }
+
+### Sign in — run this before anything below
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "{{email}}", "password": "{{password}}" }
+
+### Who am I
+GET {{host}}/api/auth/me
+Authorization: Bearer {{token}}
 
 ### Health + active AI provider
 GET {{host}}/api/health
@@ -9,6 +33,7 @@ GET {{host}}/api/certifications
 
 ### Generate questions (falls back to the template bank when Ai:Provider is Offline)
 POST {{host}}/api/questions/generate
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -24,7 +49,7 @@ GET {{host}}/api/questions?certificationCode=AIF-C01&take=10
 ### Start a 10-question practice set
 POST {{host}}/api/exams
 Content-Type: application/json
-X-User-Key: {{user}}
+Authorization: Bearer {{token}}
 
 {
   "certificationCode": "AIF-C01",
@@ -35,7 +60,7 @@ X-User-Key: {{user}}
 ### Answer a question (replace both ids with values from the session above)
 POST {{host}}/api/exams/00000000-0000-0000-0000-000000000000/answers
 Content-Type: application/json
-X-User-Key: {{user}}
+Authorization: Bearer {{token}}
 
 {
   "questionId": "00000000-0000-0000-0000-000000000000",
@@ -45,12 +70,23 @@ X-User-Key: {{user}}
 
 ### Score the session (idempotent)
 POST {{host}}/api/exams/00000000-0000-0000-0000-000000000000/submit
-X-User-Key: {{user}}
+Authorization: Bearer {{token}}
 
 ### Completed sessions
 GET {{host}}/api/exams/history?certificationCode=AIF-C01
-X-User-Key: {{user}}
+Authorization: Bearer {{token}}
 
 ### ML.NET readiness projection
 GET {{host}}/api/insights/AIF-C01/readiness
-X-User-Key: {{user}}
+Authorization: Bearer {{token}}
+
+### An administrator key alone is NOT enough: this must answer 401, not 404.
+# The admin filter and [Authorize] are separate gates, and the order they run in is not
+# guaranteed by reading the code - so it is pinned here as a request you can actually run.
+DELETE {{host}}/api/questions/00000000-0000-0000-0000-000000000001
+X-Admin-Key: {{adminKey}}
+
+### The same call with both: an account AND the operator key.
+DELETE {{host}}/api/questions/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{token}}
+X-Admin-Key: {{adminKey}}

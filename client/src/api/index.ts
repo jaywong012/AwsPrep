@@ -12,6 +12,7 @@
  * Grouping also makes the boundary visible: `api.questions.recalculateDifficulty` sitting next to
  * `api.questions.browse` says plainly that one rewrites the shared bank and the other reads it.
  */
+import { authApi } from './endpoints/auth'
 import { certificationsApi } from './endpoints/certifications'
 import { examsApi } from './endpoints/exams'
 import { insightsApi } from './endpoints/insights'
@@ -21,6 +22,7 @@ import { systemApi } from './endpoints/system'
 
 export const api = {
   system: systemApi,
+  auth: authApi,
   certifications: certificationsApi,
   questions: questionsApi,
   exams: examsApi,
@@ -28,9 +30,18 @@ export const api = {
   insights: insightsApi,
 }
 
-export { ApiError, http } from './http'
-export { getAdminKey, setAdminKey, getUserKey } from './identity'
+export { ApiError, http, setUnauthorizedHandler } from './http'
+export {
+  getAdminKey,
+  setAdminKey,
+  clearAdminKey,
+  getToken,
+  setToken,
+  clearToken,
+  purgeLegacyIdentity,
+} from './identity'
 
 export type { BrowseQuestionsParams, DifficultyRecalculation } from './endpoints/questions'
 export type { StartExamParams, AnswerParams } from './endpoints/exams'
 export type { HealthStatus } from './endpoints/system'
+export type { AuthResult, CurrentUser, Credentials } from './endpoints/auth'

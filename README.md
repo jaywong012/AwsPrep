@@ -165,11 +165,21 @@ Health check: <http://localhost:5176/api/health> · OpenAPI: <http://localhost:5
 | `POST` | `/api/exams/{id}/submit` | Score the session (idempotent) |
 | `GET` | `/api/exams/history` | Completed sessions |
 | `GET` | `/api/insights/{code}/readiness` | ML.NET readiness projection |
+| `POST` | `/api/auth/register` | Create an account, returns a token |
+| `POST` | `/api/auth/login` | Exchange credentials for a token |
+| `GET` | `/api/auth/me` | Who the token belongs to |
+| `POST` | `/api/auth/refresh` | Renew a still-valid token |
 
-Learners are identified by the `X-User-Key` header (the SPA generates and stores one per
-browser). Swap this for the authenticated subject when you add auth. Every session read and
-write is scoped to that key, so one learner cannot open, answer or submit another's session even
-holding its id — a request with the wrong key gets the same 404 as one with an invented id.
+Learners are identified by the account in their access token, sent as
+`Authorization: Bearer <token>`. Every session read and write is scoped to that account, so one
+learner cannot open, answer or submit another's session even holding its id — a request from the
+wrong account gets the same 404 as one with an invented id.
+
+Everything requires a token except `/api/health*`, `/api/auth/register`, `/api/auth/login`,
+`/api/certifications`, and the three read-only question-bank endpoints (`GET /api/questions`,
+`/api/questions/audit`, `GET /api/questions/difficulty`) — the bank is shared content, not
+anyone's personal data. Generating questions does need an account, because it spends provider
+quota against a per-learner limit.
 
 Errors come back as `application/problem+json` with a `traceId` that matches the API log line.
 Two endpoints are rate limited (see **Production deployment**) and two require an admin key.
@@ -241,7 +251,11 @@ Everything below is settable as an environment variable using `__` for `:`, e.g.
 | `Database:SeedOnStartup` | `true` | Idempotent blueprint + reference-bank seeding. Safe to leave on. |
 | `Cors:AllowedOrigins` | the local Vite origins | Must list the deployed SPA origin. Startup warns if it still only lists localhost. |
 | `Hosting:UseHttpsRedirection` | `false` in Development, else `true` | Turn off when a proxy terminates TLS without forwarding `X-Forwarded-Proto`, or you get a redirect loop. |
-| `Admin:ApiKey` | unset | Gate for the destructive endpoints. Unset means they stay open in Development and are **refused** everywhere else. |
+| `Admin:ApiKey` | unset | Gate for the destructive endpoints, *in addition to* a valid account. Unset means they stay open in Development and are **refused** everywhere else. |
+| `Jwt:Key` | unset | HMAC-SHA256 signing secret, at least 32 bytes. Development mints a random one per process (so tokens die with the API); **every other environment refuses to start without it.** Use `dotnet user-secrets set Jwt:Key <secret>` locally and `Jwt__Key` from a secret store in production. |
+| `Jwt:Issuer` / `Jwt:Audience` | `AwsCertPrep` / `AwsCertPrep.Spa` | Token issuer and audience claims. |
+| `Jwt:AccessTokenMinutes` | `43200` (30 days) | Token lifetime in minutes, 1–525600. The SPA renews on start, every 12 hours, and on tab focus, so this is how long the app may go unopened before you are signed out. Also the window in which a token cannot be revoked. |
+| `RateLimits:AuthPerFifteenMinutes` | `10` | Sign-in and registration attempts per client address. |
 | `Ai:Provider` / `Ai:ApiKey` / `Ai:Model` | `Offline` | Keep the key in a secret store, never in a file or the SPA bundle. |
 | `RateLimits:GeneratePerHour` | `30` | Per learner key. |
 | `RateLimits:GeneratePerHourPerAddress` | `60` | Per client address. The learner key is self-asserted, so this is the limit that really caps provider spend. |
@@ -255,18 +269,58 @@ exempt from every limit.
 
 Already handled: exam sessions are owner-scoped; timed exams expire server-side (the browser
 countdown is no longer the only thing stopping late answers); destructive endpoints need a key;
-generation and readiness are rate limited per learner *and* per address; provider error bodies
+generation and readiness are rate limited per authenticated account *and* per address; provider error bodies
 are logged rather than returned; responses carry `nosniff`, `DENY`, `no-referrer`, a locked-down
 CSP and HSTS; request bodies are capped at 128 KB; readiness results are cached against the
 answer history they were computed from; logs are JSON outside Development; and startup warns
 about the settings that are fine locally and wrong in production.
 
-Still open, by design: **there is no authentication.** `X-User-Key` separates learners from each
-other, not attackers from data — anyone who can reach the API can browse the bank, start
-sessions and spend LLM quota inside the rate limits. Put the deployment behind whatever
-front-door auth you already run (an identity-aware proxy, an ingress with OIDC, Entra ID app
-proxy) before exposing it beyond a trusted network, and replace `X-User-Key` with the
-authenticated subject when you do.
+### Authentication
+
+Email and password accounts via ASP.NET Core Identity, with an HS256 JWT bearer token. Passwords
+are at least 10 characters with a digit and a capital; Identity locks an account for 15 minutes
+after 5 failed attempts, and `/api/auth/login` and `/register` are additionally rate limited per
+client address. Authorization fails closed: a fallback policy authenticates every endpoint unless
+it says `[AllowAnonymous]` in so many words.
+
+What that does **not** cover, stated plainly:
+
+- **Registration is open.** Anyone who can reach the API can create an account and spend LLM
+  quota inside the rate limits. The network perimeter still matters — put the deployment behind
+  the front-door auth you already run before exposing it beyond a trusted network.
+- **The token lives in `localStorage`,** so an XSS bug in the SPA is a stolen session. This is
+  the accepted cost of not using an HttpOnly cookie across two origins in development.
+- **Sessions are designed not to expire in normal use.** The token lasts 30 days
+  (`Jwt:AccessTokenMinutes`) and the SPA renews it on every start, every 12 hours while open, and
+  whenever a hidden tab becomes visible again. So opening the app at all inside the window rolls
+  it forward and you stay signed in indefinitely; the only ways out are signing out, clearing site
+  data, or leaving it untouched for a full 30 days.
+- **Tokens cannot be revoked before they expire**, and the window above is now a month rather than
+  an hour. There is no refresh-token store and nothing checks the security stamp yet, so changing
+  a password does not end a session already in flight, and a token stolen through an XSS bug stays
+  usable until it lapses. The token carries the stamp as an `ast` claim, which is what would make
+  checking it a one-line change if that trade stops being acceptable.
+- **Email is not verified and cannot be reset** — nothing here can send mail.
+- There is no logout endpoint. A bearer token is stateless, so signing out is the client deleting
+  it; an endpoint that accepted the call and did nothing would only imply a revocation this API
+  cannot perform.
+
+### One-off: merging the pre-authentication progress
+
+Before accounts existed the SPA minted a per-browser key, and `localStorage` is scoped per
+origin — so a Vite dev server falling back from port 5173 to 5174, or a second browser profile,
+silently created a new learner and stranded the old one's progress. `client/vite.config.ts` now
+sets `strictPort` so that fails loudly instead.
+
+Two hand-run scripts in `server/AwsCertPrep.Api/Data/Scripts/` clean up after it. Both are
+idempotent and deliberately **not** migrations — a migration would replay on every fresh database
+and bake one developer's data into the schema history.
+
+| Script | What it does |
+| --- | --- |
+| `merge-user-keys.sql` | Folds several browser keys into one. Defaults to a dry run; set `@DryRun = 0` to apply, `@PurgeFixtures = 1` to also delete leftover test keys. Folds duplicate lesson rows before re-keying, because `IX_LessonProgress_UserKey_LessonTopicId` is unique. |
+| `merge-user-keys.rollback.sql` | Restores from the backup tables the merge creates. |
+| `adopt-merged-progress.sql` | Re-keys the merged history onto a registered account. Run it once, after registering. |
 
 ---
 
@@ -274,8 +328,8 @@ authenticated subject when you do.
 
 - Generated questions are study aids, not official AWS exam content. Review them before
   trusting an explanation — LLMs do get AWS service details wrong.
-- No authentication yet; `X-User-Key` identifies a browser, and progress is per browser. See
-  **Production deployment** for what that does and does not protect.
+- Progress belongs to an account, not a browser. Registration is open and tokens cannot be
+  revoked before they expire — see **Authentication** for what that does and does not protect.
 - Readiness confidence is the cross-validated AUC of the trained model; with a small answer
   history it stays near 0.5–0.6, which is honest rather than flattering.
 - `dotnet list package --vulnerable --include-transitive` and `npm audit` are both clean as of

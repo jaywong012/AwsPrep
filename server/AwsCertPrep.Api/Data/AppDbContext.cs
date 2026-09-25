@@ -1,10 +1,16 @@
 using AwsCertPrep.Api.Domain;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AwsCertPrep.Api.Data;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+/// <summary>
+/// One context for the study data and the Identity tables alike: one connection, one migration
+/// history, and the existing readiness health check covers the accounts as well.
+/// </summary>
+public class AppDbContext(DbContextOptions<AppDbContext> options)
+    : IdentityDbContext<AppUser>(options)
 {
     public DbSet<Certification> Certifications => Set<Certification>();
     public DbSet<CertificationDomain> CertificationDomains => Set<CertificationDomain>();
@@ -42,6 +48,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        // Identity maps its own tables here. Without this call the AspNet* tables are never
+        // configured, the migration comes out empty, and every sign-in fails against a database
+        // that looks migrated.
+        base.OnModelCreating(b);
+
         b.Entity<Certification>(e =>
         {
             e.HasIndex(x => x.Code).IsUnique();

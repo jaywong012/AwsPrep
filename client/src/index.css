@@ -150,6 +150,147 @@ p {
   flex-direction: column;
 }
 
+/* Signed in, the frame is a fixed rail and a column that scrolls beside it. Grid rather than
+   flex so the rail's width is stated once, here, and the collapse is a change to one number. */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  --rail: 15rem;
+}
+
+.app-shell:has(.sidebar[data-collapsed='true']) {
+  --rail: 4rem;
+}
+
+.app-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 0.6rem;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid var(--border);
+  /* No overflow:hidden here. The account panel is absolutely positioned and deliberately reaches
+     outside the rail, and hiding overflow on the rail clipped it to a sliver. The nav is the part
+     that can actually grow too tall, and it carries its own overflow-y below. */
+}
+
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.2rem 0.3rem 0.6rem;
+  min-height: 2.4rem;
+}
+
+/* The label is what collapses; the icon, the mark and the initial are what stay. Hidden rather
+   than shrunk, so nothing is left as an ambiguous few pixels of a word. */
+.sidebar[data-collapsed='true'] .sidebar-label {
+  display: none;
+}
+
+/* At 4rem the mark and the chevron cannot sit side by side - they overflowed the rail in both
+   directions - so they stack instead. */
+.sidebar[data-collapsed='true'] .sidebar-head {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.3rem;
+}
+
+.sidebar-collapse {
+  min-height: 28px;
+  width: 28px;
+  padding: 0;
+  flex: none;
+  border-radius: 7px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+.sidebar-collapse:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: transparent;
+  color: var(--text);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.sidebar-link.active {
+  background: var(--surface-2);
+  color: var(--accent);
+  font-weight: 620;
+}
+
+.nav-icon {
+  flex: none;
+}
+
+.sidebar[data-collapsed='true'] .sidebar-link,
+.sidebar[data-collapsed='true'] .brand {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.sidebar-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar[data-collapsed='true'] .sidebar-foot {
+  align-items: center;
+}
+
+.sidebar[data-collapsed='true'] .provider-badge {
+  /* The dot alone still says "something is off" and fits the rail; the word would not. */
+  font-size: 0;
+  gap: 0;
+  padding: 0.3rem;
+}
+
 .skip-link {
   position: absolute;
   left: -9999px;
@@ -541,6 +682,7 @@ a {
 
 select,
 input[type='text'],
+input[type='email'],
 input[type='number'],
 input[type='password'] {
   min-height: 40px;
@@ -581,6 +723,158 @@ select {
 select:hover,
 input:hover {
   border-color: var(--muted);
+}
+
+/* The sign-in and register screens. .main caps at 1120px, which is the right width for a
+   dashboard and far too wide for two fields; 420px matches .modal so the card reads as the same
+   kind of object as a confirmation dialog. */
+.auth-page {
+  max-width: 420px;
+  margin-inline: auto;
+}
+
+/* The account menu: the email is the trigger, and theme and sign-out live behind it. */
+.account-menu {
+  position: relative;
+}
+
+.account-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 32px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border-color: transparent;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  max-width: 15rem;
+}
+
+.account-trigger:hover:not(:disabled),
+.account-trigger[aria-expanded='true'] {
+  background: var(--surface-3);
+  border-color: transparent;
+  color: var(--text);
+}
+
+/* An email is long and the topbar is not, so it ellipsises rather than pushing the caret off the
+   end. The full address is in the title, and again at the head of the open panel. */
+.account-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-caret {
+  font-size: 0.65rem;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.account-panel {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  left: auto;
+  bottom: auto;
+  z-index: 30;
+  min-width: 13.5rem;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+}
+
+/* The address in full, because the trigger above it may have clipped it. */
+.account-who {
+  margin: 0;
+  padding: 0.35rem 0.55rem 0.45rem;
+  font-size: 0.74rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.2rem;
+}
+
+.account-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 34px;
+  padding: 0.3rem 0.55rem;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 0.85rem;
+  font-weight: 550;
+  text-align: left;
+  justify-content: flex-start;
+  border-radius: var(--r-sm);
+}
+
+.account-item:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: transparent;
+  color: var(--text);
+}
+
+.account-item-icon {
+  width: 1rem;
+  text-align: center;
+  opacity: 0.85;
+}
+
+/* In the rail the trigger sits at the bottom, so the panel opens upward and to the right rather
+   than down and to the left - down would be off the bottom of the screen. */
+.sidebar .account-menu {
+  width: 100%;
+}
+
+.sidebar .account-trigger {
+  width: 100%;
+  max-width: none;
+  justify-content: space-between;
+}
+
+.sidebar .account-panel {
+  top: auto;
+  bottom: calc(100% + 0.45rem);
+  right: auto;
+  left: 0;
+}
+
+/* Collapsed: the trigger is the initial in a circle, and the panel clears the rail. */
+.account-trigger.compact {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+  justify-content: center;
+}
+
+.account-initial {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sidebar[data-collapsed='true'] .account-menu {
+  width: auto;
+}
+
+/* Clear of the rail, not overlapping it: the trigger is a 32px circle centred in a 4rem rail, so
+   its own 100% stops well short of the edge. */
+.sidebar[data-collapsed='true'] .account-panel {
+  left: calc(100% + 1.15rem);
 }
 
 /* ---------- chips & badges ---------- */
@@ -1539,6 +1833,16 @@ kbd {
   }
 }
 
+/* Under 900px useSidebar forces the collapsed rail, so the width is already handled in JS and
+   the only thing left is to give the icons back a little of the padding. Deliberately not
+   narrowing --rail here: the `:has` rule that sets it outranks a plain .app-shell in a media
+   query, so it would read as an instruction that does nothing. */
+@media (max-width: 900px) {
+  .sidebar {
+    padding-inline: 0.4rem;
+  }
+}
+
 @media (max-width: 560px) {
   body {
     font-size: 14.5px;
@@ -1680,6 +1984,27 @@ button.review:hover:not(:disabled) {
   box-shadow: var(--shadow-sm);
 }
 
+/* "Per page", inline in the pager. The toolbar's `.field` stacks its label above a 150px-wide
+   select, which in a centred one-line bar reads as a fourth filter and pushes the page buttons
+   onto their own row; this keeps the label beside a select only as wide as "100". */
+.pager-size {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.pager-size select {
+  min-height: 30px;
+  padding: 0.2rem 1.9rem 0.2rem 0.5rem;
+  background-position: right 0.55rem center;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .pager-controls {
   display: flex;
   flex-wrap: wrap;
@@ -1707,6 +2032,15 @@ button.review:hover:not(:disabled) {
 }
 
 .page-dot.current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* The bare `button:hover` rule outranks `.page-dot.current`, so hovering the page you are
+   already on would wash the accent fill back to a plain surface. Restate it: the current
+   page keeps its fill, and hover reads as "nothing to go to here". */
+.page-dot.current:hover:not(:disabled) {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
@@ -2262,6 +2596,7 @@ button.review:hover:not(:disabled) {
 
   /* Everything that is the app rather than the content. */
   .topbar,
+  .sidebar,
   .footer,
   .skip-link,
   .toolbar,
@@ -2274,6 +2609,10 @@ button.review:hover:not(:disabled) {
   .exam-panel,
   button {
     display: none !important;
+  }
+
+  .app-shell {
+    display: block;
   }
 
   .main {
